@@ -324,7 +324,7 @@ export const SLOTS = {
   },
 
   'login-side': {
-    src: '/images/login-side.png',
+    src: '/images/login-side.jpg',
     webp: null,
     avif: null,
     ratio: '4 / 5',
