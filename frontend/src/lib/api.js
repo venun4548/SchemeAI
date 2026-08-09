@@ -1,4 +1,5 @@
-const BASE = import.meta.env.VITE_API_BASE || '/api'
+const RAW_BASE = import.meta.env.VITE_API_BASE || '/api'
+const BASE = RAW_BASE.endsWith('/api') ? RAW_BASE : (RAW_BASE.endsWith('/') ? RAW_BASE + 'api' : RAW_BASE + '/api')
 
 let accessToken = localStorage.getItem('schemeai_token') || ''
 
