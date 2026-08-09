@@ -1,0 +1,23 @@
+# Optional integrations - install only if you need them.
+# These are auto-detected at runtime with graceful fallbacks.
+
+# Vector RAG (PostgreSQL is the structured store; pick one vector backend)
+chromadb>=0.5
+faiss-cpu>=1.8
+
+# Real embeddings (falls back to a deterministic token-hash embedding)
+sentence-transformers>=3.0
+numpy>=1.26
+
+# OCR (requires tesseract binary on PATH, or pytesseract only validates files)
+pytesseract>=0.3
+opencv-python-headless>=4.10
+
+# Agent orchestration (falls back to built-in graph executor)
+langgraph>=0.2
+
+# LLM providers (optional; scoring works fully offline with rule engine)
+openai>=1.40
+
+# PDF rendering improvements
+weasyprint>=62

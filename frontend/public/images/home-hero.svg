@@ -1,0 +1,17 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1280 720" role="img" aria-label="Placeholder for home-hero">
+<title>SchemeAI home-hero image slot</title>
+<linearGradient id="base" x1="0" y1="0" x2="1280" y2="720" gradientUnits="userSpaceOnUse"><stop offset="0" stop-color="#F8F7F2" stop-opacity="1"/><stop offset="100" stop-color="#E7DCC3" stop-opacity="1"/></linearGradient>
+<radialGradient id="glowS" cx="50%" cy="50%" r="70%"><stop offset="0" stop-color="#C79A2D" stop-opacity="1"/><stop offset="100" stop-color="#C79A2D" stop-opacity="0"/></radialGradient>
+<circle cx="998.4000000000001" cy="187.20000000000002" r="1024" fill="url(#glowS)" opacity="0.35"/>
+<radialGradient id="glowG" cx="50%" cy="50%" r="70%"><stop offset="0" stop-color="#44A378" stop-opacity="1"/><stop offset="100" stop-color="#44A378" stop-opacity="0"/></radialGradient>
+<circle cx="281.6" cy="561.6" r="960" fill="url(#glowG)" opacity="0.3"/>
+<polygon points="940,20,1090,20,1130,740,900,740" fill="#F8F7F2" opacity="0.06"/>
+<polygon points="1010,20,1160,20,1200,740,970,740" fill="#F8F7F2" opacity="0.06"/>
+<polygon points="1080,20,1230,20,1270,740,1040,740" fill="#F8F7F2" opacity="0.06"/>
+<path d="M 0 720 L 0 619.2 Q 640 561.6 1280 619.2 L 1280 720 Z" fill="#062820" opacity="0.05"/>
+<g transform="translate(620 200) scale(1.05) translate(-620 -200)">
+<circle cx="620" cy="200" r="90" fill="none" stroke="#0F4C3A" stroke-width="10" opacity="0.22"/><circle cx="620" cy="200" r="136" fill="none" stroke="#17654A" stroke-width="10" opacity="0.2"/><circle cx="620" cy="200" r="182" fill="none" stroke="#C79A2D" stroke-width="10" opacity="0.18"/><circle cx="620" cy="200" r="228" fill="none" stroke="#A96A3B" stroke-width="10" opacity="0.16"/><circle cx="620" cy="200" r="274" fill="none" stroke="#44A378" stroke-width="10" opacity="0.14"/><path d="M 580 110 A 46 46 0 0 1 660 110" fill="none" stroke="#C79A2D" stroke-width="7" opacity="0.7"/><circle cx="620" cy="200" r="26" fill="#C79A2D" opacity="0.5"/>
+</g>
+<line x1="0" y1="0" x2="26" y2="-14" stroke="#0F4C3A" stroke-width="1" opacity="0.03"/><line x1="97" y1="61" x2="123" y2="47" stroke="#0F4C3A" stroke-width="1" opacity="0.03"/><line x1="194" y1="122" x2="220" y2="108" stroke="#0F4C3A" stroke-width="1" opacity="0.03"/><line x1="291" y1="183" x2="317" y2="169" stroke="#0F4C3A" stroke-width="1" opacity="0.03"/><line x1="388" y1="244" x2="414" y2="230" stroke="#0F4C3A" stroke-width="1" opacity="0.03"/><line x1="485" y1="305" x2="511" y2="291" stroke="#0F4C3A" stroke-width="1" opacity="0.03"/><line x1="582" y1="366" x2="608" y2="352" stroke="#0F4C3A" stroke-width="1" opacity="0.03"/><line x1="679" y1="427" x2="705" y2="413" stroke="#0F4C3A" stroke-width="1" opacity="0.03"/><line x1="776" y1="488" x2="802" y2="474" stroke="#0F4C3A" stroke-width="1" opacity="0.03"/><line x1="873" y1="549" x2="899" y2="535" stroke="#0F4C3A" stroke-width="1" opacity="0.03"/><line x1="970" y1="610" x2="996" y2="596" stroke="#0F4C3A" stroke-width="1" opacity="0.03"/><line x1="1067" y1="671" x2="1093" y2="657" stroke="#0F4C3A" stroke-width="1" opacity="0.03"/><line x1="1164" y1="12" x2="1190" y2="-2" stroke="#0F4C3A" stroke-width="1" opacity="0.03"/><line x1="1261" y1="73" x2="1287" y2="59" stroke="#0F4C3A" stroke-width="1" opacity="0.03"/>
+<radialGradient id="vg" cx="50%" cy="45%" r="85%"><stop offset="55%" stop-color="#000" stop-opacity="0"/><stop offset="100%" stop-color="#062820" stop-opacity="0.18"/></radialGradient><rect x="0" y="0" width="1280" height="720" rx="0" fill="url(#vg)" />
+</svg>

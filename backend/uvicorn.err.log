@@ -1,0 +1,15 @@
+INFO:     Started server process [22092]
+INFO:     Waiting for application startup.
+INFO:     Application startup complete.
+INFO:     Uvicorn running on http://0.0.0.0:5004 (Press CTRL+C to quit)
+sheets_sync Users OK (updated=False)
+sheets_sync AuditLogs OK (updated=False)
+sheets_sync AuditLogs OK (updated=False)
+sheets_sync AuditLogs OK (updated=False)
+sheets_sync AuditLogs OK (updated=False)
+sheets_sync AuditLogs OK (updated=False)
+sheets_sync AuditLogs OK (updated=False)
+sheets_sync AuditLogs OK (updated=False)
+sheets_sync AuditLogs OK (updated=False)
+sheets_sync Users OK (updated=False)
+sheets_sync Users OK (updated=False)

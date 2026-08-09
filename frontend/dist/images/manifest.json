@@ -1,0 +1,121 @@
+{
+  "home-hero": {
+    "file": "/images/home-hero.svg",
+    "width": 1280,
+    "height": 720,
+    "ratio": "1280/720",
+    "composition": "figures right · negative space left"
+  },
+  "about-hero": {
+    "file": "/images/about-hero.svg",
+    "width": 1280,
+    "height": 720,
+    "ratio": "1280/720",
+    "composition": "symmetrical building · morning light"
+  },
+  "about-purpose": {
+    "file": "/images/about-purpose.svg",
+    "width": 1280,
+    "height": 720,
+    "ratio": "1280/720",
+    "composition": "family LEFT · negative space right"
+  },
+  "about-does-discover": {
+    "file": "/images/about-does-discover.svg",
+    "width": 1024,
+    "height": 768,
+    "ratio": "1024/768",
+    "composition": "DISCOVER · citizen + smartphone"
+  },
+  "about-does-understand": {
+    "file": "/images/about-does-understand.svg",
+    "width": 1024,
+    "height": 768,
+    "ratio": "1024/768",
+    "composition": "UNDERSTAND · facilitator + tablet"
+  },
+  "about-does-prepare": {
+    "file": "/images/about-does-prepare.svg",
+    "width": 1024,
+    "height": 768,
+    "ratio": "1024/768",
+    "composition": "PREPARE · organising documents"
+  },
+  "about-does-navigate": {
+    "file": "/images/about-does-navigate.svg",
+    "width": 1024,
+    "height": 768,
+    "ratio": "1024/768",
+    "composition": "NAVIGATE · official digital application"
+  },
+  "about-does-track": {
+    "file": "/images/about-does-track.svg",
+    "width": 1024,
+    "height": 768,
+    "ratio": "1024/768",
+    "composition": "TRACK · status on smartphone"
+  },
+  "schemes-hero": {
+    "file": "/images/schemes-hero.svg",
+    "width": 1280,
+    "height": 720,
+    "ratio": "1280/720",
+    "composition": "balanced · all welfare categories"
+  },
+  "schemes-agriculture": {
+    "file": "/images/schemes-agriculture.svg",
+    "width": 1280,
+    "height": 720,
+    "ratio": "1280/720",
+    "composition": "farmer + field · early morning"
+  },
+  "schemes-education": {
+    "file": "/images/schemes-education.svg",
+    "width": 1280,
+    "height": 720,
+    "ratio": "1280/720",
+    "composition": "college students · bright daylight"
+  },
+  "schemes-healthcare": {
+    "file": "/images/schemes-healthcare.svg",
+    "width": 1280,
+    "height": 720,
+    "ratio": "1280/720",
+    "composition": "family + doctor · calm health centre"
+  },
+  "howitworks-journey": {
+    "file": "/images/howitworks-journey.svg",
+    "width": 1280,
+    "height": 547,
+    "ratio": "1280/547",
+    "composition": "left→right five-stage journey"
+  },
+  "help-support": {
+    "file": "/images/help-support.svg",
+    "width": 1280,
+    "height": 720,
+    "ratio": "1280/720",
+    "composition": "service desk · helping citizen resolve issue"
+  },
+  "login-side": {
+    "file": "/images/login-side.svg",
+    "width": 800,
+    "height": 1000,
+    "ratio": "800/1000",
+    "composition": "secure access · subject RIGHT · calm negative space"
+  },
+  "signup-side": {
+    "file": "/images/signup-side.svg",
+    "width": 800,
+    "height": 1000,
+    "ratio": "800/1000",
+    "composition": "family home · warm window light"
+  },
+  "footer-band": {
+    "file": "/images/footer-band.svg",
+    "width": 1280,
+    "height": 547,
+    "ratio": "1280/547",
+    "composition": "evening centre · warm architecture lights"
+  }
+}

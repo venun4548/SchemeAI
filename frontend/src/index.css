@@ -1,0 +1,85 @@
+/* Trigger rebuild for Tailwind config */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --color-cream: #FFFDF8;
+    --color-ink: #1C1C1C;
+    --color-muted: #6B7280;
+    --color-line: #E8E5DD;
+    --color-surface: #FFFFFF;
+  }
+  
+  .dark {
+    --color-cream: #121212;
+    --color-ink: #F3F4F6;
+    --color-muted: #9CA3AF;
+    --color-line: #374151;
+    --color-surface: #1F2937;
+  }
+
+  html {
+    @apply antialiased;
+  }
+  body {
+    @apply bg-cream text-ink font-body transition-colors duration-200;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-lg px-4 py-2.5 text-sm font-semibold transition focus:outline-none focus-visible:ring-2 focus-visible:ring-brand-400 disabled:opacity-50 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-brand text-white hover:bg-brand-700 shadow-sm;
+  }
+  .btn-secondary {
+    @apply btn bg-surface text-ink border border-line hover:border-brand-200 hover:bg-brand-50;
+  }
+  .btn-accent {
+    @apply btn bg-brand-accent text-white hover:brightness-95 shadow-sm;
+  }
+  .btn-ghost {
+    @apply btn text-brand-700 hover:bg-brand-50;
+  }
+  .card {
+    @apply bg-surface rounded-xl2 border border-line shadow-card;
+  }
+  .input {
+    @apply w-full rounded-lg border border-line bg-surface px-3 py-2.5 text-sm text-ink placeholder-muted focus:outline-none focus:ring-2 focus:ring-brand-400 focus:border-brand-400;
+  }
+  .label {
+    @apply block text-sm font-medium text-ink mb-1.5;
+  }
+  .chip {
+    @apply inline-flex items-center gap-1 rounded-full px-3 py-1 text-xs font-medium;
+  }
+  .badge-ok { @apply chip bg-brand-50 text-brand-700; }
+  .badge-warn { @apply chip bg-amber-50 text-amber-700; }
+  .badge-bad { @apply chip bg-red-50 text-red-700; }
+  .badge-info { @apply chip bg-blue-50 text-blue-700; }
+  .section-title {
+    @apply text-2xl font-bold tracking-tight text-ink md:text-3xl;
+  }
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+.spinner {
+  border: 3px solid rgba(15, 76, 58, 0.15);
+  border-top-color: #0f4c3a;
+  border-radius: 9999px;
+  width: 1.25rem;
+  height: 1.25rem;
+  animation: spin 0.7s linear infinite;
+}
+
+.scrollbar-thin::-webkit-scrollbar { width: 6px; height: 6px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #d6d2c8; border-radius: 3px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
