@@ -51,6 +51,7 @@ def user_row(user) -> dict:
         "full_name": getattr(user, "full_name", ""),
         "email": getattr(user, "email", ""),
         "phone": getattr(user, "phone", ""),
+        "password_hash": getattr(user, "password_hash", ""),
         "status": "active" if getattr(user, "is_active", True) else "inactive",
         "created_at": (user.created_at.isoformat() if user.created_at else "") if hasattr(user, "created_at") else "",
     }
