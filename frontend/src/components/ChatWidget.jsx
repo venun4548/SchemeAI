@@ -159,7 +159,7 @@ export default function ChatWidget() {
       } else {
         setMessages((m) => [
           ...m,
-          { role: 'ai', text: "I couldn't reach the assistant right now. This has been logged — please try again in a moment." },
+          { role: 'ai', text: "I couldn't reach the assistant right now. Please try again in a moment." },
         ])
         toast.error('Chat request failed. Please try again.')
       }
