@@ -86,3 +86,18 @@ def init_db():
             for name, ddl in cols:
                 if name not in existing:
                     conn.execute(text(f'ALTER TABLE "{table}" ADD COLUMN {name} {ddl}'))
+
+        # Backfill citizen_id for existing users if missing
+        from app.core.security import generate_citizen_id
+        from app.models.models import User
+        SessionLocal = sessionmaker(bind=engine)
+        with SessionLocal() as session:
+            # Backfill citizen_id for users where it's missing or incorrectly formatted (e.g., just the UUID)
+            users_without_id = session.query(User).filter(
+                (User.citizen_id.is_(None)) | 
+                (User.citizen_id.not_like('SCAI-CIT-%'))
+            ).all()
+            for u in users_without_id:
+                u.citizen_id = generate_citizen_id(session)
+            if users_without_id:
+                session.commit()

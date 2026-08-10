@@ -11,7 +11,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
-from app.models.models import User
+from app.models.models import User, TokenBlocklist
 import string
 import random
 
@@ -82,9 +82,24 @@ def get_current_user(
     if credentials is None:
         raise HTTPException(status_code=401, detail="Not authenticated")
     payload = decode_token(credentials.credentials)
+    
+    jti = payload.get("jti")
+    if jti and db.get(TokenBlocklist, jti):
+        raise HTTPException(status_code=401, detail="Token has been revoked")
+
     user = db.get(User, payload.get("sub"))
     if user is None or not user.is_active:
         raise HTTPException(status_code=401, detail="Account is inactive")
+        
+    iat = payload.get("iat")
+    if iat and user.sessions_valid_after:
+        iat_dt = datetime.fromtimestamp(iat, tz=timezone.utc)
+        valid_after = user.sessions_valid_after
+        if valid_after.tzinfo is None:
+            valid_after = valid_after.replace(tzinfo=timezone.utc)
+        if iat_dt < valid_after:
+            raise HTTPException(status_code=401, detail="Session expired")
+            
     return user
 
 
@@ -97,11 +112,25 @@ def get_optional_user(
         return None
     try:
         payload = decode_token(credentials.credentials)
+        jti = payload.get("jti")
+        if jti and db.get(TokenBlocklist, jti):
+            return None
     except HTTPException:
         return None
+        
     user = db.get(User, payload.get("sub"))
     if user is None or not user.is_active:
         return None
+        
+    iat = payload.get("iat")
+    if iat and user.sessions_valid_after:
+        iat_dt = datetime.fromtimestamp(iat, tz=timezone.utc)
+        valid_after = user.sessions_valid_after
+        if valid_after.tzinfo is None:
+            valid_after = valid_after.replace(tzinfo=timezone.utc)
+        if iat_dt < valid_after:
+            return None
+            
     return user
 
 

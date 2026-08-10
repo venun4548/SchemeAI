@@ -64,10 +64,19 @@ export function AuthProvider({ children }) {
     return u
   }, [])
 
-  const logout = useCallback(() => {
+  const logout = useCallback(async () => {
+    try {
+      if (user && user.role !== 'CITIZEN') {
+        await api.post('/admin/logout')
+      } else if (user) {
+        await api.post('/profile/logout')
+      }
+    } catch {
+      // Ignore network errors on logout
+    }
     setToken(null)
     setUser(null)
-  }, [])
+  }, [user])
 
   const refresh = useCallback(async () => {
     try {

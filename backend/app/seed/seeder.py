@@ -169,8 +169,10 @@ def seed_all(db: Session) -> dict:
 
     # Admin + demo citizen
     if not db.query(User).filter_by(email="admin@schemeai.in").first():
+        from app.core.security import generate_citizen_id
         admin = User(email="admin@schemeai.in", full_name="SchemeAI Admin",
                      role="admin", admin_role="super_admin",
+                     citizen_id=generate_citizen_id(db),
                      password_hash=hash_password("Admin@123"), is_verified=True)
         db.add(admin)
         counts["users"] += 1
@@ -200,7 +202,9 @@ def seed_all(db: Session) -> dict:
     for email, password, name, role in role_test_accounts:
         u = db.query(User).filter_by(email=email).first()
         if not u:
+            from app.core.security import generate_citizen_id
             u = User(email=email, full_name=name, role="admin", admin_role=role,
+                     citizen_id=generate_citizen_id(db),
                      password_hash=hash_password(password), is_verified=True)
             db.add(u)
             db.flush()
@@ -210,8 +214,10 @@ def seed_all(db: Session) -> dict:
             u.admin_role = role
 
     if not db.query(User).filter_by(email="demo@schemeai.in").first():
+        from app.core.security import generate_citizen_id
         demo = User(email="demo@schemeai.in", full_name="Ravi Kumar",
-                    phone="9876543210", password_hash=hash_password("Demo@123"), is_verified=True)
+                    phone="9876543210", citizen_id=generate_citizen_id(db),
+                    password_hash=hash_password("Demo@123"), is_verified=True)
         db.add(demo)
         db.flush()
         db.add(Profile(user_id=demo.id, age=29, gender="male", state="Andhra Pradesh",

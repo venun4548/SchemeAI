@@ -3,10 +3,12 @@ from sqlalchemy.orm import Session
 
 from app.agents.profile import derive, normalize
 from app.api.deps import family_to_dict, get_or_create_profile, profile_to_dict
-from app.core.security import get_current_user
+from app.core.security import get_current_user, _bearer, decode_token
 from app.database import get_db
-from app.models.models import FamilyMember, Profile, User
+from app.models.models import FamilyMember, Profile, User, AuditLog, LoginAttempt, TokenBlocklist
 from app.schemas.schemas import FamilyIn, ProfileIn
+from fastapi.security import HTTPAuthorizationCredentials
+from datetime import datetime, timezone
 
 router = APIRouter(prefix="/profile", tags=["profile"])
 
@@ -32,6 +34,40 @@ def completeness(user: User = Depends(get_current_user)):
     from app.agents.eligibility_engine import schema_completeness
 
     return schema_completeness(profile_to_dict(p))
+
+
+@router.get("/activity")
+def get_activity(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    logs = db.query(AuditLog).filter_by(actor_id=user.id).order_by(AuditLog.created_at.desc()).limit(50).all()
+    return logs
+
+
+@router.get("/security/sessions")
+def get_sessions(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    logins = db.query(LoginAttempt).filter_by(email=user.email, success=True).order_by(LoginAttempt.created_at.desc()).limit(10).all()
+    return logins
+
+
+@router.post("/logout")
+def logout(
+    user: User = Depends(get_current_user), 
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer)
+):
+    if credentials:
+        payload = decode_token(credentials.credentials)
+        jti = payload.get("jti")
+        if jti and not db.get(TokenBlocklist, jti):
+            db.add(TokenBlocklist(jti=jti))
+            db.commit()
+    return {"ok": True}
+
+
+@router.post("/logout-all")
+def logout_all(user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    user.sessions_valid_after = datetime.now(timezone.utc)
+    db.commit()
+    return {"ok": True}
 
 
 # ---------------------------- Family --------------------------------------- #

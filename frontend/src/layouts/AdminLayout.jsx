@@ -3,6 +3,7 @@ import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import ProfileMenu from '../components/ProfileMenu'
 
 const allNavGroups = [
   {
@@ -118,20 +119,7 @@ export default function AdminLayout() {
             <span className="chip bg-white/15 text-white hidden sm:inline-flex">Enterprise Portal</span>
           </div>
           <div className="flex items-center gap-3 text-sm shrink-0">
-            <div className="hidden sm:flex flex-col items-end mr-2">
-              <span className="text-brand-100 font-bold truncate max-w-[180px]">{user?.full_name}</span>
-              <span className="text-xs font-mono text-brand-200 opacity-80" title="Citizen ID">{user?.citizen_id}</span>
-            </div>
-            <button
-              onClick={() => {
-                logout()
-                toast.info('Signed out.')
-                navigate('/login')
-              }}
-              className="btn !py-1.5 !px-3 bg-white/10 text-white hover:bg-white/20 border border-white/20"
-            >
-              Sign out
-            </button>
+            <ProfileMenu admin />
           </div>
         </div>
         {open && (

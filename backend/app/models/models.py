@@ -43,6 +43,7 @@ class User(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
     last_login_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    sessions_valid_after: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
 
     profile: Mapped["Profile"] = orm_relationship(back_populates="user", uselist=False, cascade="all, delete-orphan")
     family = orm_relationship("FamilyMember", back_populates="user", cascade="all, delete-orphan")
@@ -603,4 +604,11 @@ class SchemeVersion(Base):
     submitted_by: Mapped[str] = mapped_column(String(32), default="")
     approved_by: Mapped[str] = mapped_column(String(32), default="")
     reason: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class TokenBlocklist(Base):
+    __tablename__ = "token_blocklist"
+
+    jti: Mapped[str] = mapped_column(String(36), primary_key=True)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)

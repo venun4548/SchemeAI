@@ -4,6 +4,7 @@ import { useTheme } from '../context/ThemeContext'
 import { useToast } from '../context/ToastContext'
 import { useNavigate } from 'react-router-dom'
 import { useState } from 'react'
+import ProfileMenu from '../components/ProfileMenu'
 
 const userNav = [
   { to: '/dashboard', label: 'AI Dashboard', icon: 'M3 13h8V3H3v10zm0 8h8v-6H3v6zm10 0h8V11h-8v10zm0-18v6h8V3h-8z' },
@@ -81,20 +82,7 @@ export default function AppLayout() {
             <button onClick={toggle} className="btn-ghost !px-2.5" aria-label="Toggle theme">
               {dark ? '☀️' : '🌙'}
             </button>
-            <div className="hidden sm:flex flex-col items-end mr-2">
-              <span className="text-sm font-bold text-ink">{user?.full_name}</span>
-              <span className="text-xs font-mono text-muted" title="Citizen ID">{user?.citizen_id}</span>
-            </div>
-            <button
-              onClick={() => {
-                logout()
-                toast.info('Signed out.')
-                navigate('/')
-              }}
-              className="btn-ghost !py-2 text-sm"
-            >
-              Sign out
-            </button>
+            <ProfileMenu />
           </div>
         </div>
       </header>

@@ -22,10 +22,14 @@ from app.models.models import (
     Profile,
     Scheme,
     User,
+    AuditLog,
+    TokenBlocklist,
 )
 from app.rag.vector_store import RAGStore
 from app.schemas.schemas import AdminUserCreate, BroadcastIn, FeedbackResolveIn, KnowledgeIn, NewsIn
 from app.services.audit import audit
+from fastapi.security import HTTPAuthorizationCredentials
+from app.core.security import decode_token, _bearer
 
 router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(require_admin)])
 
@@ -33,6 +37,47 @@ router = APIRouter(prefix="/admin", tags=["admin"], dependencies=[Depends(requir
 def _ip(request: Request) -> str:
     xff = request.headers.get("x-forwarded-for")
     return (xff or request.client.host if request.client else "").split(",")[0].strip()
+
+
+@router.get("/profile")
+def admin_profile(user: User = Depends(require_admin)):
+    from app.core.rbac import get_role_permissions
+    perms = get_role_permissions(user.admin_role)
+    return {
+        "admin": admin_to_dict(user),
+        "permissions": perms
+    }
+
+
+@router.get("/profile/activity")
+def admin_activity(user: User = Depends(require_admin), db: Session = Depends(get_db)):
+    logs = db.query(AuditLog).filter_by(actor_id=user.id).order_by(AuditLog.created_at.desc()).limit(50).all()
+    return logs
+
+
+@router.post("/logout")
+def admin_logout(
+    request: Request,
+    user: User = Depends(require_admin), 
+    db: Session = Depends(get_db),
+    credentials: HTTPAuthorizationCredentials | None = Depends(_bearer)
+):
+    if credentials:
+        payload = decode_token(credentials.credentials)
+        jti = payload.get("jti")
+        if jti and not db.get(TokenBlocklist, jti):
+            db.add(TokenBlocklist(jti=jti))
+            
+    audit(
+        db=db,
+        actor=user,
+        action="ADMIN_SIGNOUT",
+        entity="session",
+        entity_id=user.id,
+        ip=_ip(request)
+    )
+    db.commit()
+    return {"ok": True}
 
 
 # ------------------------------ Dashboard -------------------------------- #

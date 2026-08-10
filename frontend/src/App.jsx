@@ -23,6 +23,8 @@ import Documents from './pages/app/Documents'
 import Applications from './pages/app/Applications'
 import ApplicationDetail from './pages/app/ApplicationDetail'
 import Offices from './pages/app/Offices'
+import Profile from './pages/app/Profile'
+import ProfileSecurity from './pages/app/ProfileSecurity'
 import Family from './pages/app/Family'
 import News from './pages/app/News'
 import Notifications from './pages/app/Notifications'
@@ -30,6 +32,8 @@ import Reports from './pages/app/Reports'
 
 import AdminLayout from './layouts/AdminLayout'
 import AdminDashboard from './pages/admin/Dashboard'
+import AdminProfile from './pages/admin/Profile'
+import AdminProfileActivity from './pages/admin/ProfileActivity'
 import AdminUsers from './pages/admin/Users'
 import AdminApplications from './pages/admin/Applications'
 import AdminDocuments from './pages/admin/Documents'
@@ -81,12 +85,16 @@ export default function App() {
             <Route path="/news" element={<News />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/security" element={<ProfileSecurity />} />
           </Route>
         </Route>
 
         <Route element={<ProtectedRoute admin />}>
           <Route element={<AdminLayout />}>
             <Route path="/admin" element={<AdminDashboard />} />
+            <Route path="/admin/profile" element={<AdminProfile />} />
+            <Route path="/admin/profile/activity" element={<AdminProfileActivity />} />
             <Route path="/admin/applications" element={<AdminApplications />} />
             <Route path="/admin/documents" element={<AdminDocuments />} />
             <Route path="/admin/cases" element={<AdminCases />} />
