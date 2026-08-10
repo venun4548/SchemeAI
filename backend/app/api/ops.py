@@ -21,13 +21,19 @@ from app.core.rbac import (
 )
 from app.database import get_db
 from app.models.models import (
+    AgentExecution,
     AgentRun,
     AgentStatus,
     AIIncident,
     AnalyticsEvent,
     Application,
     AuditLog,
+    ChatLog,
+    Conversation,
+    ConversationMessage,
     Feedback,
+    Investigation,
+    InvestigationResult,
     KnowledgeDoc,
     LoginAttempt,
     Profile,
@@ -58,7 +64,8 @@ from app.services.audit import audit, audit_to_dict
 
 router = APIRouter(prefix="/admin/ops", tags=["admin-ops"], dependencies=[Depends(require_admin)])
 
-KNOWN_AGENTS = ["profiling", "eligibility", "policy", "recommender", "explainability", "guidance", "fraud", "documents"]
+KNOWN_AGENTS = ["profiling", "eligibility", "policy", "recommender", "explainability", "guidance", "fraud", "documents",
+                "profile", "research", "recommendation", "explanation"]
 
 
 def _ip(request: Request) -> str:
@@ -668,7 +675,177 @@ def publication_queue(db: Session = Depends(get_db),
     return {"items": [_scheme_lifecycle(db, s) for s in pending], "total": len(pending)}
 
 
-# ------------------------------- AI operations ----------------------------- #
+# ------------------------------ AI operations ----------------------------- #
+def _investigation_to_admin_dict(db: Session, inv) -> dict:
+    results = db.query(InvestigationResult).filter_by(investigation_id=inv.id) \
+        .order_by(InvestigationResult.rank).all()
+    executions = db.query(AgentExecution).filter_by(investigation_id=inv.id) \
+        .order_by(AgentExecution.step).all()
+    user = db.get(User, inv.user_id)
+    return {
+        "investigation_id": inv.id,
+        "run_id": inv.run_id,
+        "user_id": inv.user_id,
+        "user": user.full_name if user else "?",
+        "user_email": user.email if user else "",
+        "status": inv.status,
+        "focus": inv.focus,
+        "scheme_name": inv.scheme_name,
+        "summary": inv.summary,
+        "total_schemes": inv.total_schemes,
+        "elapsed_ms": inv.elapsed_ms,
+        "error": inv.error,
+        "created_at": inv.created_at.isoformat() if inv.created_at else None,
+        "completed_at": inv.completed_at.isoformat() if inv.completed_at else None,
+        "agent_executions": [
+            {"step": e.step, "agent_key": e.agent_key, "agent_name": e.agent_name,
+             "status": e.status, "task": e.task, "detail": e.detail,
+             "duration_ms": e.duration_ms}
+            for e in executions
+        ],
+        "recommendations": [
+            {"rank": r.rank, "scheme_name": r.scheme_name, "category": r.category,
+             "eligibility_status": r.eligibility_status, "score": r.score,
+             "confidence": r.confidence, "matched_count": r.matched_count,
+             "failed_count": r.failed_count, "unknown_count": r.unknown_count,
+             "reasons": r.reasons, "next_steps": r.next_steps}
+            for r in results
+        ],
+    }
+
+
+@router.get("/investigations")
+def list_investigations(
+    status: str | None = None,
+    q: str | None = None,
+    limit: int = Query(100, le=500),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_permission("ai.view")),
+):
+    query = db.query(Investigation)
+    if status:
+        query = query.filter(Investigation.status == status)
+    if q:
+        like = f"%{q.lower()}%"
+        ids = [u.id for u in db.query(User).filter(User.full_name.ilike(like) | User.email.ilike(like)).all()]
+        query = query.filter(Investigation.user_id.in_(ids) | Investigation.scheme_name.ilike(like))
+    items = query.order_by(Investigation.created_at.desc()).limit(limit).all()
+
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    day_ago = now - timedelta(hours=24)
+    agent_rows = db.query(AgentExecution).filter(AgentExecution.created_at >= day_ago).all()
+    per_agent: dict[str, dict] = {}
+    for a in agent_rows:
+        bucket = per_agent.setdefault(a.agent_name, {"name": a.agent_name, "runs": 0, "failures": 0, "avg_ms": []})
+        bucket["runs"] += 1
+        if a.status == "failed":
+            bucket["failures"] += 1
+        bucket["avg_ms"].append(a.duration_ms)
+    for b in per_agent.values():
+        b["avg_ms"] = round(sum(b["avg_ms"]) / len(b["avg_ms"])) if b["avg_ms"] else 0
+
+    status_rows = db.query(Investigation.status, func.count(Investigation.id)) \
+        .group_by(Investigation.status).all()
+    return {
+        "items": [_investigation_to_admin_dict(db, i) for i in items],
+        "total": len(items),
+        "stats": {
+            "total_runs": db.query(Investigation).count(),
+            "runs_today": db.query(Investigation).filter(Investigation.created_at >= today_start).count(),
+            "runs_24h": db.query(Investigation).filter(Investigation.created_at >= day_ago).count(),
+            "completed": db.query(Investigation).filter_by(status="completed").count(),
+            "failed": db.query(Investigation).filter_by(status="failed").count(),
+            "avg_elapsed_ms": round(db.query(func.avg(Investigation.elapsed_ms)).scalar() or 0),
+            "status_distribution": [{"status": s, "count": c} for s, c in status_rows],
+        },
+        "agent_stats": sorted(per_agent.values(), key=lambda x: -x["runs"]),
+    }
+
+
+@router.get("/investigations/{investigation_id}")
+def investigation_admin_detail(
+    investigation_id: str,
+    db: Session = Depends(get_db),
+    user: User = Depends(require_permission("ai.view")),
+):
+    inv = db.get(Investigation, investigation_id)
+    if not inv:
+        raise HTTPException(status_code=404, detail="Investigation not found")
+    return _investigation_to_admin_dict(db, inv)
+
+
+@router.get("/chat")
+def chat_monitoring(
+    limit: int = Query(50, le=200),
+    db: Session = Depends(get_db),
+    user: User = Depends(require_permission("ai.view")),
+):
+    """Admin AI monitoring for the citizen chatbot."""
+    now = datetime.now(timezone.utc)
+    today_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
+    day_ago = now - timedelta(hours=24)
+
+    logs = db.query(ChatLog).order_by(ChatLog.created_at.desc()).limit(limit).all()
+    logs_today = db.query(ChatLog).filter(ChatLog.created_at >= today_start).all()
+
+    # Agent usage from per-request agents_used telemetry (24h)
+    agent_rows = db.query(ChatLog).filter(ChatLog.created_at >= day_ago).all()
+    per_agent: dict[str, dict] = {}
+    for row in agent_rows:
+        for a in (row.agents_used or []):
+            name = a.get("name", "unknown")
+            bucket = per_agent.setdefault(name, {"name": name, "runs": 0, "duration_ms": []})
+            bucket["runs"] += 1
+            bucket["duration_ms"].append(a.get("duration_ms", 0))
+    for b in per_agent.values():
+        b["avg_ms"] = round(sum(b["duration_ms"]) / len(b["duration_ms"])) if b["duration_ms"] else 0
+
+    intent_rows = (
+        db.query(ChatLog.intent, func.count(ChatLog.id))
+        .filter(ChatLog.created_at >= today_start)
+        .group_by(ChatLog.intent)
+        .order_by(func.count(ChatLog.id).desc())
+        .all()
+    )
+
+    avg_ms = db.query(func.avg(ChatLog.duration_ms)).filter(ChatLog.created_at >= today_start).scalar() or 0
+    recent_failures = (
+        db.query(ChatLog)
+        .filter(ChatLog.status == "error", ChatLog.created_at >= today_start)
+        .order_by(ChatLog.created_at.desc())
+        .limit(10)
+        .all()
+    )
+
+    def _log_out(row: ChatLog) -> dict:
+        u = db.get(User, row.user_id) if row.user_id else None
+        return {
+            "id": row.id, "conversation_id": row.conversation_id, "intent": row.intent,
+            "message": row.message[:200], "status": row.status, "error": row.error[:300],
+            "duration_ms": row.duration_ms, "agents_used": row.agents_used,
+            "user": {"name": u.full_name if u else "Anonymous", "email": u.email if u else ""},
+            "ip": row.ip, "created_at": row.created_at.isoformat() if row.created_at else None,
+        }
+
+    return {
+        "items": [_log_out(l) for l in logs],
+        "stats": {
+            "total_conversations": db.query(Conversation).count(),
+            "conversations_today": db.query(Conversation).filter(Conversation.created_at >= today_start).count(),
+            "messages_today": db.query(ConversationMessage).filter(ConversationMessage.created_at >= today_start).count(),
+            "requests_today": db.query(ChatLog).filter(ChatLog.created_at >= today_start).count(),
+            "success_today": db.query(ChatLog).filter(ChatLog.created_at >= today_start, ChatLog.status == "success").count(),
+            "errors_today": db.query(ChatLog).filter(ChatLog.created_at >= today_start, ChatLog.status == "error").count(),
+            "rate_limited_today": db.query(ChatLog).filter(ChatLog.created_at >= today_start, ChatLog.status == "rate_limited").count(),
+            "avg_response_ms": round(avg_ms),
+        },
+        "agent_stats": sorted(per_agent.values(), key=lambda x: -x["runs"]),
+        "intent_distribution": [{"intent": i, "count": c} for i, c in intent_rows],
+        "recent_failures": [_log_out(f) for f in recent_failures],
+    }
+
+
 @router.get("/agents")
 def agent_status(db: Session = Depends(get_db), user: User = Depends(require_permission("ai.view"))):
     for name in KNOWN_AGENTS:

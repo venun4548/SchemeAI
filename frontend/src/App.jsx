@@ -45,6 +45,7 @@ import AdminReports from './pages/admin/Reports'
 import AdminKnowledge from './pages/admin/Knowledge'
 import AdminAnalytics from './pages/admin/Analytics'
 import AdminRuns from './pages/admin/Runs'
+import AdminChat from './pages/admin/Chat'
 
 import NotFound from './pages/NotFound'
 import ChatWidget from './components/ChatWidget'
@@ -102,6 +103,7 @@ export default function App() {
             <Route path="/admin/knowledge" element={<AdminKnowledge />} />
             <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="/admin/runs" element={<AdminRuns />} />
+            <Route path="/admin/chat" element={<AdminChat />} />
           </Route>
         </Route>
 

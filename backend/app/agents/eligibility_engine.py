@@ -239,6 +239,243 @@ def score_scheme(profile: dict, scheme: dict) -> dict:
     }
 
 
+# --------------------------------------------------------------------------- #
+# Three-state evaluation: MATCHED / FAILED / UNKNOWN
+# --------------------------------------------------------------------------- #
+# Derived flags are computed by app.agents.profile.derive; a derived flag is
+# only "known" when at least one of its source attributes is populated.
+DERIVED_SOURCES: dict[str, list[str]] = {
+    "is_farmer": ["occupation", "land_owned_acres"],
+    "is_student": ["occupation"],
+    "is_entrepreneur": ["occupation", "is_entrepreneur"],
+    "is_senior": ["age"],
+    "is_minor": ["age"],
+    "is_woman": ["gender"],
+    "income_below_1l": ["annual_income"],
+    "income_below_2p5l": ["annual_income"],
+    "income_below_3l": ["annual_income"],
+    "income_below_8l": ["annual_income"],
+    "income_below_18l": ["annual_income"],
+    "income_below_2p4l": ["annual_income"],
+    "has_unorganised_income": ["annual_income", "occupation"],
+    "retired": ["occupation"],
+}
+
+FIELD_LABELS: dict[str, str] = {
+    "age": "age", "gender": "gender", "state": "state", "district": "district",
+    "occupation": "occupation", "annual_income": "annual income",
+    "education": "education", "category": "social category",
+    "disability": "disability status", "marital_status": "marital status",
+    "employment_type": "employment type", "is_entrepreneur": "business status",
+    "business_type": "business type", "business_years": "business vintage",
+    "land_owned_acres": "land ownership", "is_marginal_farmer": "land holding size",
+    "has_savings_account": "savings account status", "has_kisan_credit_card": "Kisan Credit Card status",
+    "student_degree": "degree details", "cibil_score": "CIBIL score",
+    "has_lpg_connection": "LPG connection status", "has_ration_card": "ration card status",
+    "has_house": "house ownership", "is_widow": "marital status",
+    "aadhaar_linked": "Aadhaar linkage", "children_girl": "daughters in family",
+    "has_children": "children", "pension_age_reached": "pension age status",
+    "is_farmer": "farming engagement", "is_student": "student status",
+    "is_senior": "age", "is_minor": "age", "is_woman": "gender",
+    "income_below_1l": "annual income", "income_below_2p5l": "annual income",
+    "income_below_3l": "annual income", "income_below_8l": "annual income",
+    "income_below_18l": "annual income", "income_below_2p4l": "annual income",
+    "has_unorganised_income": "income and occupation",
+    "retired": "occupation", "village_panchayat": "village panchayat",
+}
+
+
+def _value_known(profile: dict, field: str) -> bool:
+    if field in DERIVED_SOURCES:
+        return any(profile.get(src) not in (None, "", 0, False) for src in DERIVED_SOURCES[field])
+    return profile.get(field) not in (None, "")
+
+
+def _field_label(field: str) -> str:
+    return FIELD_LABELS.get(field, field.replace("_", " "))
+
+
+def evaluate_rule_tri(rule: dict, profile: dict) -> dict:
+    """Evaluate one rule into matched|failed|unknown.
+
+    unknown means the rule could not be decided because the profile does not
+    carry the data the rule depends on (this is what drives
+    INSUFFICIENT_INFORMATION / REQUIRES_REVIEW).
+    """
+    if "any" in rule:
+        subs = [evaluate_rule_tri(r, profile) for r in rule["any"]]
+        matched = any(s["outcome"] == "matched" for s in subs)
+        if matched:
+            outcome = "matched"
+        elif all(s["outcome"] == "unknown" for s in subs):
+            outcome = "unknown"
+        else:
+            outcome = "failed"
+        return {
+            "outcome": outcome, "matched": matched,
+            "reason": " or ".join(s["reason"] for s in subs),
+            "label": rule.get("label", rule.get("reason", "")),
+            "field": _field_from_rule(rule),
+            "sub_rules": subs,
+            "weight": float(rule.get("weight", 1)),
+            "op": rule.get("op", ""),
+            "improve": rule.get("improve", ""),
+        }
+    if "all" in rule:
+        subs = [evaluate_rule_tri(r, profile) for r in rule["all"]]
+        matched = all(s["outcome"] == "matched" for s in subs)
+        if matched:
+            outcome = "matched"
+        elif any(s["outcome"] == "failed" for s in subs):
+            outcome = "failed"
+        else:
+            outcome = "unknown"
+        return {
+            "outcome": outcome, "matched": matched,
+            "reason": " and ".join(s["reason"] for s in subs),
+            "label": rule.get("label", rule.get("reason", "")),
+            "field": _field_from_rule(rule),
+            "sub_rules": subs,
+            "weight": float(rule.get("weight", 1)),
+            "op": rule.get("op", ""),
+            "improve": rule.get("improve", ""),
+        }
+
+    field = rule["field"]
+    op = rule.get("op", "eq")
+    expected = rule.get("value")
+    label = rule.get("label", "")
+    improve = rule.get("improve", "")
+    if not _value_known(profile, field):
+        for fb in rule.get("fallback_fields", []):
+            if _value_known(profile, fb):
+                m, r = evaluate_op(profile.get(fb), op, expected)
+                if m:
+                    return {
+                        "outcome": "matched", "matched": True,
+                        "reason": f"{r} (via {fb})", "label": label,
+                        "field": field, "improve": improve,
+                        "weight": float(rule.get("weight", 1)),
+                    }
+        return {
+            "outcome": "unknown", "matched": False,
+            "reason": f"Could not be assessed — your {_field_label(field)} is not on file yet.",
+            "label": label, "field": field, "improve": improve,
+            "weight": float(rule.get("weight", 1)),
+        }
+    matched, reason = evaluate_op(profile.get(field), op, expected)
+    return {
+        "outcome": "matched" if matched else "failed",
+        "matched": matched, "reason": reason, "label": label,
+        "field": field, "improve": improve,
+        "weight": float(rule.get("weight", 1)),
+    }
+
+
+ELIGIBILITY_STATUSES = [
+    "LIKELY_ELIGIBLE", "LIKELY_NOT_ELIGIBLE", "INSUFFICIENT_INFORMATION", "REQUIRES_REVIEW",
+]
+RECOMMENDATION_CATEGORIES = [
+    "HIGH MATCH", "GOOD MATCH", "POSSIBLE MATCH", "NOT CURRENTLY ELIGIBLE",
+]
+_HARD_RULE_WEIGHT = 20.0
+
+
+def eligibility_status_from(failed_rules: list[dict], unknown_count: int) -> str:
+    """Map tri-state rule outcomes to an overall eligibility status."""
+    failed_count = len(failed_rules)
+    if failed_count and any(float(r.get("weight", 1)) >= _HARD_RULE_WEIGHT for r in failed_rules):
+        return "LIKELY_NOT_ELIGIBLE"
+    if failed_count == 0 and unknown_count == 0:
+        return "LIKELY_ELIGIBLE"
+    if failed_count == 0:
+        return "INSUFFICIENT_INFORMATION"
+    if unknown_count > 0:
+        return "REQUIRES_REVIEW"
+    return "LIKELY_NOT_ELIGIBLE"
+
+
+def recommendation_category_from(status: str, score: float) -> str:
+    if status == "LIKELY_ELIGIBLE":
+        return "HIGH MATCH" if score >= 75 else "GOOD MATCH"
+    if status in ("INSUFFICIENT_INFORMATION", "REQUIRES_REVIEW"):
+        return "POSSIBLE MATCH"
+    return "NOT CURRENTLY ELIGIBLE"
+
+
+def evaluate_scheme_tri(profile: dict, scheme: dict) -> dict:
+    """Full three-state explainable evaluation for one scheme.
+
+    Unlike score_scheme (which only splits matched/missing), this preserves the
+    distinction between a rule the user genuinely fails and a rule that simply
+    cannot be judged from the profile (unknown).
+    """
+    rules = scheme.get("eligibility_rules") or []
+    if not rules:
+        base = 40.0
+        return {
+            "scheme_id": scheme.get("id", ""),
+            "scheme_name": scheme.get("name", ""),
+            "score": base, "confidence": 30.0,
+            "status": "INSUFFICIENT_INFORMATION", "category": "POSSIBLE MATCH",
+            "matched_rules": [], "failed_rules": [], "unknown_rules": [],
+            "all_rules": [], "matched_count": 0, "failed_count": 0, "unknown_count": 0,
+            "approval_probability": base, "reasons": ["Eligibility rules are not yet published for this scheme."],
+            "next_steps": [], "profile_completeness": _profile_completeness(profile),
+            "rule_coverage": 0,
+        }
+
+    evaluated = [evaluate_rule_tri(r, profile) for r in rules]
+    matched = [e for e in evaluated if e["outcome"] == "matched"]
+    failed = [e for e in evaluated if e["outcome"] == "failed"]
+    unknown = [e for e in evaluated if e["outcome"] == "unknown"]
+
+    total_weight = sum(float(r.get("weight", 1)) for r in rules) or 1.0
+    score = round(
+        sum(float(r.get("weight", 1)) for r, e in zip(rules, evaluated) if e["outcome"] == "matched")
+        / total_weight * 100, 1
+    )
+
+    completeness = _profile_completeness(profile)
+    confidence = round(max(0.0, min(100.0, completeness * 0.55 + 45.0 - len(failed) * 3 - len(unknown) * 2)), 1)
+    approval = round(max(0.0, min(99.0, score * 0.62 + confidence * 0.28 + (10 if matched else 0))), 1)
+
+    status = eligibility_status_from(failed, len(unknown))
+    category = recommendation_category_from(status, score)
+
+    next_steps = []
+    for r in matched + failed + unknown:
+        if r.get("improve") and r["improve"] not in next_steps:
+            next_steps.append(r["improve"])
+    next_steps = list(dict.fromkeys(next_steps))[:6]
+    if unknown:
+        missing_fields = list(dict.fromkeys(_field_label(r["field"]) for r in unknown))[:4]
+        next_steps.insert(0, f"Complete your profile to confirm: {', '.join(missing_fields)}.")
+
+    reasons = []
+    if matched:
+        reasons.append(f"Met {len(matched)} of {len(rules)} eligibility criteria.")
+    if failed:
+        reasons.append(f"Does not meet {len(failed)} criteria: " + "; ".join(r["label"] for r in failed[:3]))
+    if unknown:
+        reasons.append(f"{len(unknown)} criteria need profile data before they can be judged.")
+    if status == "LIKELY_ELIGIBLE":
+        reasons.append("Strong candidate for this scheme.")
+
+    return {
+        "scheme_id": scheme.get("id", ""),
+        "scheme_name": scheme.get("name", ""),
+        "score": score, "confidence": confidence,
+        "status": status, "category": category,
+        "matched_rules": matched, "failed_rules": failed, "unknown_rules": unknown,
+        "all_rules": evaluated,
+        "matched_count": len(matched), "failed_count": len(failed), "unknown_count": len(unknown),
+        "approval_probability": approval, "reasons": reasons,
+        "next_steps": next_steps,
+        "profile_completeness": completeness, "rule_coverage": 100.0,
+    }
+
+
 def schema_completeness(profile: dict) -> dict:
     """Which profile attributes are missing entirely (drives questionnaire)."""
     schema = {

@@ -119,10 +119,11 @@ function sheetToJSON(sheetName) {
     const row = data[i];
     const obj = {};
     for (let j = 0; j < headers.length; j++) {
-      obj[headers[j]] = row[j];
+      const headerKey = String(headers[j]).toLowerCase();
+      obj[headerKey] = row[j];
     }
     // Only include rows where the first ID column is not empty
-    if (obj[headers[0]]) {
+    if (obj[String(headers[0]).toLowerCase()]) {
       result.push(obj);
     }
   }

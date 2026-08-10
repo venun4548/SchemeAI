@@ -39,6 +39,7 @@ const allNavGroups = [
       { to: '/admin/agents', label: 'Agent Control Center', icon: '⚙', roles: ['SUPER_ADMIN', 'AI_OPERATIONS'] },
       { to: '/admin/incidents', label: 'AI Incidents', icon: '⚠', roles: ['SUPER_ADMIN', 'AI_OPERATIONS'] },
       { to: '/admin/runs', label: 'Agent Logs', icon: '≡', roles: ['SUPER_ADMIN', 'AI_OPERATIONS'] },
+      { to: '/admin/chat', label: 'Citizen Assistant', icon: '◷', roles: ['SUPER_ADMIN', 'AI_OPERATIONS', 'OPERATIONS_ADMIN'] },
     ],
   },
   {

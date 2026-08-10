@@ -324,7 +324,7 @@ export const SLOTS = {
   },
 
   'login-side': {
-    src: '/images/login-side.jpg',
+    src: '/images/auth-hero-v2.jpg',
     webp: null,
     avif: null,
     ratio: '4 / 5',
@@ -346,7 +346,7 @@ export const SLOTS = {
   },
 
   'signup-side': {
-    src: '/images/signup-side.jpg',
+    src: '/images/auth-hero-v2.jpg',
     webp: null,
     avif: null,
     ratio: '4 / 5',

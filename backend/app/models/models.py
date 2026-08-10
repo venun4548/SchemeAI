@@ -1,5 +1,6 @@
 import uuid
 from datetime import datetime, timezone
+from typing import Any
 
 from sqlalchemy import (
     JSON,
@@ -326,6 +327,158 @@ class AnalyticsEvent(Base):
     state: Mapped[str] = mapped_column(String(60), default="")
     event_meta: Mapped[dict] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class AgentExecution(Base):
+    """One agent step inside an investigation (multi-agent scheme investigator)."""
+    __tablename__ = "agent_executions"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=gen_id)
+    run_id: Mapped[str] = mapped_column(String(32), index=True)
+    user_id: Mapped[str] = mapped_column(String(32), default="", index=True)
+    investigation_id: Mapped[str | None] = mapped_column(String(32), nullable=True, index=True)
+    agent_key: Mapped[str] = mapped_column(String(40))
+    agent_name: Mapped[str] = mapped_column(String(60))
+    step: Mapped[int] = mapped_column(Integer, default=0)
+    status: Mapped[str] = mapped_column(String(20), default="completed")  # running|completed|failed|skipped
+    task: Mapped[str] = mapped_column(String(255), default="")
+    detail: Mapped[str] = mapped_column(String(255), default="")
+    result: Mapped[dict] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
+    duration_ms: Mapped[int] = mapped_column(Integer, default=0)
+    error: Mapped[str] = mapped_column(Text, default="")
+    started_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class Investigation(Base):
+    """A multi-agent scheme investigation run for a citizen."""
+    __tablename__ = "investigations"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=gen_id)
+    user_id: Mapped[str] = mapped_column(String(32), default="", index=True)
+    run_id: Mapped[str] = mapped_column(String(32), index=True)
+    status: Mapped[str] = mapped_column(String(20), default="running")  # running|completed|failed
+    focus: Mapped[str] = mapped_column(String(20), default="all")  # all|scheme
+    scheme_id: Mapped[str | None] = mapped_column(String(32), nullable=True)
+    scheme_name: Mapped[str] = mapped_column(String(200), default="")
+    current_agent: Mapped[str] = mapped_column(String(60), default="")
+    agent_total: Mapped[int] = mapped_column(Integer, default=0)
+    agent_completed: Mapped[int] = mapped_column(Integer, default=0)
+    summary: Mapped[dict] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
+    total_schemes: Mapped[int] = mapped_column(Integer, default=0)
+    elapsed_ms: Mapped[int] = mapped_column(Integer, default=0)
+    error: Mapped[str] = mapped_column(Text, default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, index=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+
+
+class InvestigationResult(Base):
+    """Per-scheme outcome of an investigation run."""
+    __tablename__ = "investigation_results"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=gen_id)
+    investigation_id: Mapped[str] = mapped_column(ForeignKey("investigations.id"), index=True)
+    scheme_id: Mapped[str] = mapped_column(String(32), index=True)
+    scheme_name: Mapped[str] = mapped_column(String(200), default="")
+    rank: Mapped[int] = mapped_column(Integer, default=0)
+    category: Mapped[str] = mapped_column(String(30), default="")  # HIGH MATCH|GOOD MATCH|POSSIBLE MATCH|NOT CURRENTLY ELIGIBLE
+    eligibility_status: Mapped[str] = mapped_column(String(30), default="")  # LIKELY_ELIGIBLE|LIKELY_NOT_ELIGIBLE|INSUFFICIENT_INFORMATION|REQUIRES_REVIEW
+    score: Mapped[float] = mapped_column(Float, default=0.0)
+    confidence: Mapped[float] = mapped_column(Float, default=0.0)
+    matched_count: Mapped[int] = mapped_column(Integer, default=0)
+    failed_count: Mapped[int] = mapped_column(Integer, default=0)
+    unknown_count: Mapped[int] = mapped_column(Integer, default=0)
+    reasons: Mapped[list] = mapped_column(MutableList.as_mutable(JSON), default=list)
+    next_steps: Mapped[list] = mapped_column(MutableList.as_mutable(JSON), default=list)
+    document_status: Mapped[dict] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
+    detail: Mapped[dict] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow)
+
+
+class EligibilityEvaluation(Base):
+    """Persisted 'Why am I not eligible?' evaluation for one scheme."""
+    __tablename__ = "eligibility_evaluations"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=gen_id)
+    user_id: Mapped[str] = mapped_column(String(32), default="", index=True)
+    scheme_id: Mapped[str] = mapped_column(String(32), index=True)
+    run_id: Mapped[str] = mapped_column(String(32), index=True)
+    status: Mapped[str] = mapped_column(String(30), default="")  # LIKELY_ELIGIBLE|LIKELY_NOT_ELIGIBLE|INSUFFICIENT_INFORMATION|REQUIRES_REVIEW
+    score: Mapped[float] = mapped_column(Float, default=0.0)
+    confidence: Mapped[float] = mapped_column(Float, default=0.0)
+    matched_count: Mapped[int] = mapped_column(Integer, default=0)
+    failed_count: Mapped[int] = mapped_column(Integer, default=0)
+    unknown_count: Mapped[int] = mapped_column(Integer, default=0)
+    profile_completeness: Mapped[float] = mapped_column(Float, default=0.0)
+    summary: Mapped[dict] = mapped_column(MutableDict.as_mutable(JSON), default=dict)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, index=True)
+
+
+class EligibilityRuleResult(Base):
+    """Per-rule breakdown of an eligibility evaluation."""
+    __tablename__ = "eligibility_rule_results"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=gen_id)
+    evaluation_id: Mapped[str] = mapped_column(ForeignKey("eligibility_evaluations.id"), index=True)
+    rule_index: Mapped[int] = mapped_column(Integer, default=0)
+    field: Mapped[str] = mapped_column(String(60), default="")
+    label: Mapped[str] = mapped_column(String(300), default="")
+    op: Mapped[str] = mapped_column(String(20), default="")
+    expected: Mapped[Any] = mapped_column(JSON, default=None)
+    actual: Mapped[str] = mapped_column(String(200), default="")
+    outcome: Mapped[str] = mapped_column(String(10), default="")  # matched|failed|unknown
+    reason: Mapped[str] = mapped_column(String(300), default="")
+    improve: Mapped[str] = mapped_column(String(300), default="")
+    weight: Mapped[float] = mapped_column(Float, default=1.0)
+
+
+class Conversation(Base):
+    """A persisted chat conversation (conversation memory)."""
+    __tablename__ = "conversations"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=gen_id)
+    user_id: Mapped[str] = mapped_column(String(32), default="", index=True)
+    title: Mapped[str] = mapped_column(String(200), default="New chat")
+    message_count: Mapped[int] = mapped_column(Integer, default=0)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, index=True)
+    updated_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, onupdate=utcnow)
+
+    messages = orm_relationship("ConversationMessage", back_populates="conversation",
+                                cascade="all, delete-orphan", order_by="ConversationMessage.created_at")
+
+
+class ConversationMessage(Base):
+    __tablename__ = "conversation_messages"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=gen_id)
+    conversation_id: Mapped[str] = mapped_column(ForeignKey("conversations.id"), index=True)
+    user_id: Mapped[str] = mapped_column(String(32), default="", index=True)
+    role: Mapped[str] = mapped_column(String(10))  # user|ai
+    message: Mapped[str] = mapped_column(Text, default="")
+    intent: Mapped[str] = mapped_column(String(40), default="")
+    agents_used: Mapped[list] = mapped_column(MutableList.as_mutable(JSON), default=list)
+    sources: Mapped[list] = mapped_column(MutableList.as_mutable(JSON), default=list)
+    buttons: Mapped[list] = mapped_column(MutableList.as_mutable(JSON), default=list)
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, index=True)
+
+    conversation: Mapped["Conversation"] = orm_relationship(back_populates="messages")
+
+
+class ChatLog(Base):
+    """Per-request chat telemetry for admin AI monitoring + rate limiting."""
+    __tablename__ = "chat_logs"
+
+    id: Mapped[str] = mapped_column(String(32), primary_key=True, default=gen_id)
+    user_id: Mapped[str] = mapped_column(String(32), default="", index=True)
+    conversation_id: Mapped[str] = mapped_column(String(32), default="", index=True)
+    intent: Mapped[str] = mapped_column(String(40), default="")
+    message: Mapped[str] = mapped_column(Text, default="")
+    agents_used: Mapped[list] = mapped_column(MutableList.as_mutable(JSON), default=list)
+    status: Mapped[str] = mapped_column(String(20), default="success")  # success|error|rate_limited
+    error: Mapped[str] = mapped_column(Text, default="")
+    duration_ms: Mapped[int] = mapped_column(Integer, default=0)
+    ip: Mapped[str] = mapped_column(String(64), default="")
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=utcnow, index=True)
 
 
 class AgentRun(Base):

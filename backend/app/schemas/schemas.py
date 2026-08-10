@@ -276,6 +276,12 @@ class IncidentAssignIn(BaseModel):
 
 
 # ---------- Misc ----------
+class ChatIn(BaseModel):
+    message: str
+    conversation_id: str | None = None
+    context: dict | None = None
+
+
 class VoiceCommandIn(BaseModel):
     text: str
     language: str = "en"

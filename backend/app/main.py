@@ -5,9 +5,11 @@ from app.api import (
     admin,
     applications,
     auth,
+    chat,
     dashboard,
     documents,
     eligibility,
+    investigator,
     news,
     notifications,
     offices,
@@ -57,6 +59,7 @@ def create_app() -> FastAPI:
     app.include_router(questionnaire.router, prefix=prefix)
     app.include_router(schemes.router, prefix=prefix)
     app.include_router(eligibility.router, prefix=prefix)
+    app.include_router(investigator.router, prefix=prefix)
     app.include_router(documents.router, prefix=prefix)
     app.include_router(applications.router, prefix=prefix)
     app.include_router(offices.router, prefix=prefix)
@@ -64,6 +67,7 @@ def create_app() -> FastAPI:
     app.include_router(notifications.router, prefix=prefix)
     app.include_router(reports.router, prefix=prefix)
     app.include_router(voice.router, prefix=prefix)
+    app.include_router(chat.router, prefix=prefix)
     app.include_router(support.router, prefix=prefix)
     app.include_router(dashboard.router, prefix=prefix)
     app.include_router(admin.router, prefix=prefix)
