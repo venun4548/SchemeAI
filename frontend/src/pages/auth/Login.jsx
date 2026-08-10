@@ -34,7 +34,7 @@ export default function Login() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-cream grid lg:grid-cols-2">
+    <div className="min-h-[calc(100vh-4rem)] bg-cream flex items-center justify-center">
       {/* Login form — calm negative space */}
       <div className="flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
@@ -109,15 +109,6 @@ export default function Login() {
         </div>
       </div>
 
-      {/* Secure access image slot — subject right, calm negative space */}
-      <div className="relative hidden lg:block min-h-[560px]">
-        <SmartImage slot="login-side" fill />
-        <div className="absolute inset-0 flex flex-col justify-end p-10 bg-gradient-to-t from-green-950/60 via-transparent to-transparent">
-          <p className="text-white/90 font-medium leading-relaxed max-w-sm text-sm">
-            “Government benefits without the guesswork.”
-          </p>
-        </div>
-      </div>
     </div>
   )
 }
