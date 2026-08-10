@@ -52,7 +52,7 @@ export default function SmartImage({
 
   return (
     <div
-      className={`relative overflow-hidden bg-brand-50 ${className}`}
+      className={`relative overflow-hidden bg-brand-50 ${className} ${fill ? 'absolute inset-0' : ''}`}
       style={style}
     >
       {finalSrc && (

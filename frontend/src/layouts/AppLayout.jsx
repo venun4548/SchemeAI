@@ -77,18 +77,21 @@ export default function AppLayout() {
               </span>
             </Link>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <button onClick={toggle} className="btn-ghost !px-2.5" aria-label="Toggle theme">
               {dark ? '☀️' : '🌙'}
             </button>
-            <span className="hidden sm:block text-sm font-medium text-ink">{user?.full_name}</span>
+            <div className="hidden sm:flex flex-col items-end mr-2">
+              <span className="text-sm font-bold text-ink">{user?.full_name}</span>
+              <span className="text-xs font-mono text-muted" title="Citizen ID">{user?.citizen_id}</span>
+            </div>
             <button
               onClick={() => {
                 logout()
                 toast.info('Signed out.')
                 navigate('/')
               }}
-              className="btn-secondary !py-2"
+              className="btn-ghost !py-2 text-sm"
             >
               Sign out
             </button>

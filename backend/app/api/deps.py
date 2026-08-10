@@ -45,7 +45,7 @@ def scheme_to_dict(s: Scheme, include_rules: bool = True) -> dict:
 
 def user_to_dict(u: User) -> dict:
     return {
-        "id": u.id, "email": u.email, "phone": u.phone, "full_name": u.full_name,
+        "id": u.id, "citizen_id": u.citizen_id, "email": u.email, "phone": u.phone, "full_name": u.full_name,
         "role": u.role, "language": u.language, "is_verified": u.is_verified,
         "is_active": u.is_active,
         "admin_role": u.admin_role,

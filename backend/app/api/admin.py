@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import scheme_to_dict
 from app.core.rbac import admin_to_dict, has_permission, require_admin, require_permission
-from app.core.security import hash_password
+from app.core.security import hash_password, generate_citizen_id
 from app.database import get_db
 from app.models.models import (
     AgentRun,
@@ -107,8 +107,20 @@ def analytics(db: Session = Depends(get_db), user: User = Depends(require_permis
 
 # ------------------------------ Users ------------------------------------- #
 @router.get("/users")
-def list_users(db: Session = Depends(get_db), user: User = Depends(require_permission("users.view"))):
-    users = db.query(User).order_by(User.created_at.desc()).all()
+def list_users(search: str | None = None, db: Session = Depends(get_db), user: User = Depends(require_permission("users.view"))):
+    query = db.query(User)
+    if search:
+        search = search.strip()
+        if search.upper().startswith("SCAI-CIT-"):
+            query = query.filter(User.citizen_id == search.upper())
+        else:
+            search_term = f"%{search}%"
+            query = query.filter(
+                (User.email.ilike(search_term)) |
+                (User.phone.ilike(search_term)) |
+                (User.full_name.ilike(search_term))
+            )
+    users = query.order_by(User.created_at.desc()).all()
     return {"items": [admin_to_dict(u) for u in users], "total": len(users)}
 
 
@@ -133,6 +145,7 @@ def create_user(data: AdminUserCreate, request: Request,
         role=data.role,
         admin_role=data.admin_role if data.role == "admin" else "operations_admin",
         password_hash=hash_password(data.password),
+        citizen_id=generate_citizen_id(db),
         is_verified=True,
     )
     db.add(u)
@@ -143,6 +156,13 @@ def create_user(data: AdminUserCreate, request: Request,
     audit(db, user, "user.created", "user", u.id, entity_name=u.email,
           new_value={"full_name": u.full_name, "role": u.role, "admin_role": u.admin_role},
           ip=_ip(request))
+
+    from app.services.sheets_sync import sync_record, user_row, admin_row
+    if u.role == "admin":
+        sync_record("Admins", admin_row(u), id_column="admin_id")
+    else:
+        sync_record("Users", user_row(u), id_column="user_id")
+
     return admin_to_dict(u)
 
 

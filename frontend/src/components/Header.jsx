@@ -74,13 +74,17 @@ export default function Header() {
                   Admin
                 </Link>
               )}
+              <div className="hidden sm:flex flex-col items-end mr-2">
+                <span className="text-sm font-bold text-ink">{user?.full_name}</span>
+                <span className="text-xs font-mono text-muted" title="Citizen ID">{user?.citizen_id}</span>
+              </div>
               <button
                 onClick={() => {
                   logout()
                   toast.info('You have been signed out.')
                   navigate('/')
                 }}
-                className="btn-ghost"
+                className="btn-ghost !px-2"
               >
                 Sign out
               </button>

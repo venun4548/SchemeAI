@@ -12,6 +12,8 @@ from sqlalchemy.orm import Session
 from app.config import settings
 from app.database import get_db
 from app.models.models import User
+import string
+import random
 
 _PBKDF2_ITERATIONS = 260_000
 
@@ -24,6 +26,16 @@ def hash_password(password: str) -> str:
         "sha256", password.encode("utf-8"), salt, _PBKDF2_ITERATIONS
     )
     return f"pbkdf2_sha256${_PBKDF2_ITERATIONS}${salt.hex()}${digest.hex()}"
+
+
+def generate_citizen_id(db: Session) -> str:
+    """Generates a permanent, unique public Citizen ID for a user."""
+    chars = string.ascii_uppercase + string.digits
+    while True:
+        random_str = ''.join(secrets.choice(chars) for _ in range(8))
+        citizen_id = f"SCAI-CIT-{random_str}"
+        if not db.query(User).filter_by(citizen_id=citizen_id).first():
+            return citizen_id
 
 
 def verify_password(password: str, stored: str) -> bool:

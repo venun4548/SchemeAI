@@ -69,6 +69,21 @@ export default function Dashboard() {
           <p className="text-sm text-muted">
             Welcome back, {user?.full_name || profile?.name || 'there'}. Here’s what the agents found.
           </p>
+          {user?.citizen_id && (
+            <div className="flex items-center gap-3 mt-3">
+              <span className="text-xs font-semibold text-muted uppercase tracking-wider">SCHEMEAI CITIZEN ID</span>
+              <span className="font-mono bg-white border border-line px-2 py-1 rounded text-ink font-bold text-sm tracking-widest">{user.citizen_id}</span>
+              <button 
+                onClick={() => {
+                  navigator.clipboard.writeText(user.citizen_id)
+                  alert("Copied to clipboard!")
+                }}
+                className="btn-ghost !px-2 !py-1 text-xs"
+              >
+                Copy ID
+              </button>
+            </div>
+          )}
         </div>
         <div className="flex gap-2">
           <Link to="/recommendations" className="btn-primary">Run full analysis</Link>

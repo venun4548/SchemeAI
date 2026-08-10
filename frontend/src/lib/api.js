@@ -54,6 +54,12 @@ async function request(method, path, { body, formData, isBlob } = {}) {
   if (!res.ok) {
     const err = new Error(detailMessage(data))
     err.status = res.status
+    
+    if (res.status === 401 && !path.startsWith('/auth/login') && !path.startsWith('/auth/register')) {
+      setToken(null)
+      window.location.href = '/login'
+    }
+    
     throw err
   }
   return data

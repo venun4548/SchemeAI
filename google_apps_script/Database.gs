@@ -14,8 +14,8 @@ const SHEET_NAMES = [
 ];
 
 const COLUMNS = {
-  Users: ['user_id', 'full_name', 'phone', 'email', 'password_hash', 'state', 'district', 'occupation', 'income_range', 'created_at', 'updated_at', 'status', 'last_login'],
-  Admins: ['admin_id', 'full_name', 'email', 'phone', 'password_hash', 'role', 'status', 'created_at', 'last_login', 'token'],
+  Users: ['user_id', 'citizen_id', 'full_name', 'phone', 'email', 'password_hash', 'state', 'district', 'occupation', 'income_range', 'created_at', 'updated_at', 'status', 'last_login'],
+  Admins: ['admin_id', 'citizen_id', 'full_name', 'email', 'phone', 'password_hash', 'role', 'status', 'created_at', 'last_login', 'token'],
   Roles: ['role_id', 'role_name', 'description', 'permissions'],
   Schemes: ['scheme_id', 'scheme_name', 'description', 'category', 'government_level', 'state', 'district', 'benefit', 'eligibility_summary', 'required_documents', 'official_url', 'status', 'created_by', 'reviewed_by', 'published_by', 'created_at', 'updated_at', 'published_at'],
   SchemeEligibility: ['rule_id', 'scheme_id', 'field', 'operator', 'value', 'priority', 'created_at'],

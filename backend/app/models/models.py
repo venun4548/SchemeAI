@@ -31,6 +31,7 @@ class User(Base):
     __tablename__ = "users"
 
     id: Mapped[str] = mapped_column(String(32), primary_key=True, default=gen_id)
+    citizen_id: Mapped[str] = mapped_column(String(18), unique=True, index=True, nullable=True)
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     phone: Mapped[str] = mapped_column(String(20), default="")
     password_hash: Mapped[str] = mapped_column(String(255))

@@ -8,6 +8,7 @@ from app.core.security import (
     get_current_user,
     hash_password,
     verify_password,
+    generate_citizen_id,
 )
 from app.database import get_db
 from app.models.models import LoginAttempt, Profile, User
@@ -42,6 +43,7 @@ def register(data: RegisterIn, db: Session = Depends(get_db)):
         full_name=data.full_name.strip(),
         language=data.language,
         password_hash=hash_password(data.password),
+        citizen_id=generate_citizen_id(db),
         is_verified=False,
     )
     db.add(user)
@@ -69,6 +71,13 @@ def login(data: LoginIn, request: Request, db: Session = Depends(get_db)):
     _log_attempt(db, data.email, True, request, reason="success")
     db.commit()
     db.refresh(user)
+
+    from app.services.sheets_sync import sync_record, user_row, admin_row
+    if user.role == "admin":
+        sync_record("Admins", admin_row(user), id_column="admin_id")
+    else:
+        sync_record("Users", user_row(user), id_column="user_id")
+
     return TokenOut(access_token=create_access_token(user), user=user_to_dict(user))
 
 

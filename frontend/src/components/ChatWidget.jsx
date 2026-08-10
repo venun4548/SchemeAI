@@ -23,6 +23,17 @@ const WELCOME =
 
 const STORAGE_KEY = 'schemeai_chat_conversation_id'
 
+const VOICE_LANGUAGES = [
+  { code: 'en', label: 'English', lang: 'en-IN' },
+  { code: 'hi', label: 'Hindi', lang: 'hi-IN' },
+  { code: 'te', label: 'Telugu', lang: 'te-IN' },
+  { code: 'ta', label: 'Tamil', lang: 'ta-IN' },
+  { code: 'kn', label: 'Kannada', lang: 'kn-IN' },
+  { code: 'mr', label: 'Marathi', lang: 'mr-IN' },
+  { code: 'bn', label: 'Bengali', lang: 'bn-IN' },
+  { code: 'gu', label: 'Gujarati', lang: 'gu-IN' },
+]
+
 function RichText({ text }) {
   const parts = String(text || '').split('**')
   return (
@@ -49,6 +60,7 @@ export default function ChatWidget() {
   const [conversationId, setConversationId] = useState(null)
   const [conversations, setConversations] = useState([])
   const [showHistory, setShowHistory] = useState(false)
+  const [voiceLang, setVoiceLang] = useState('en')
   const scrollRef = useRef(null)
   const toast = useToast()
   const recognitionRef = useRef(null)
@@ -151,7 +163,6 @@ export default function ChatWidget() {
           intent: res.intent,
         },
       ])
-      speak(res.message)
       if (user) loadConversations()
     } catch (e) {
       if (e.status === 429) {
@@ -200,11 +211,12 @@ export default function ChatWidget() {
     rec.start()
   }
 
-  function speak(text) {
+  function speakMessage(text) {
     if (!('speechSynthesis' in window)) return
     try {
       window.speechSynthesis.cancel()
-      const u = new SpeechSynthesisUtterance(text.replace(/\*\*/g, ''))
+      const u = new SpeechSynthesisUtterance(String(text || '').replace(/\*\*/g, ''))
+      u.lang = (VOICE_LANGUAGES.find((l) => l.code === voiceLang) || VOICE_LANGUAGES[0]).lang
       u.rate = 1
       window.speechSynthesis.speak(u)
     } catch {
@@ -310,6 +322,20 @@ export default function ChatWidget() {
               >
                 <RichText text={m.text} />
 
+                {m.role === 'ai' && m.text && (
+                  <button
+                    onClick={() => speakMessage(m.text)}
+                    className="mt-2 inline-flex items-center gap-1.5 rounded-full border border-brand-200 bg-brand-50 px-2.5 py-1 text-[11px] font-medium text-brand-700 hover:bg-brand-100 transition"
+                    aria-label="Listen"
+                    title={`Listen in ${(VOICE_LANGUAGES.find((l) => l.code === voiceLang) || VOICE_LANGUAGES[0]).label}`}
+                  >
+                    <svg viewBox="0 0 24 24" className="h-3 w-3" fill="currentColor">
+                      <path d="M12 3a3 3 0 0 0-3 3v6a3 3 0 0 0 6 0V6a3 3 0 0 0-3-3zm-6 9a6 6 0 0 0 12 0h2a8 8 0 0 1-7 7.93V22h-2v-2.07A8 8 0 0 1 4 12h2z" />
+                    </svg>
+                    Listen
+                  </button>
+                )}
+
                 {m.quickActions && (
                   <div className="mt-2.5 flex flex-wrap gap-1.5">
                     {QUICK_ACTIONS.map((q) => (
@@ -388,6 +414,21 @@ export default function ChatWidget() {
         </div>
 
         <div className="border-t border-line bg-white p-2">
+          <div className="px-1 pb-1.5">
+            <select
+              value={voiceLang}
+              onChange={(e) => setVoiceLang(e.target.value)}
+              className="w-full input !py-1.5 !text-xs"
+              aria-label="Listen language"
+              title="Choose the language used by the Listen button"
+            >
+              {VOICE_LANGUAGES.map((l) => (
+                <option key={l.code} value={l.code}>
+                  Listen in: {l.label}
+                </option>
+              ))}
+            </select>
+          </div>
           <div className="flex items-center gap-2">
             <input
               className="input flex-1 !py-2"

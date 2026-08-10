@@ -24,17 +24,19 @@ export default function AdminUsers() {
   const [form, setForm] = useState(empty)
   const [busy, setBusy] = useState(false)
   const [removing, setRemoving] = useState(null)
+  const [search, setSearch] = useState('')
   const toast = useToast()
 
   async function load() {
     try {
-      setData(await api.get('/admin/users'))
+      const q = search ? `?search=${encodeURIComponent(search)}` : ''
+      setData(await api.get(`/admin/users${q}`))
     } catch (e) {
       setError(e.message)
     }
   }
 
-  useEffect(() => { load() }, [])
+  useEffect(() => { load() }, [search])
 
   async function verify(id) {
     try {
@@ -117,7 +119,16 @@ export default function AdminUsers() {
           <h1 className="text-2xl font-bold text-ink">Users</h1>
           <p className="text-sm text-muted">Manage accounts, roles and access across the platform.</p>
         </div>
-        <button className="btn-primary" onClick={() => setCreating(true)}>+ Create user</button>
+        <div className="flex gap-3 w-full sm:w-auto">
+          <input 
+            type="search" 
+            placeholder="Search name, email, or Citizen ID..."
+            value={search}
+            onChange={e => setSearch(e.target.value)}
+            className="input w-full sm:w-64"
+          />
+          <button className="btn-primary shrink-0" onClick={() => setCreating(true)}>+ Create user</button>
+        </div>
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
@@ -134,8 +145,7 @@ export default function AdminUsers() {
           <table className="w-full text-sm">
             <thead>
               <tr className="bg-cream text-left text-muted">
-                <th className="px-4 py-3 font-semibold">Name</th>
-                <th className="px-4 py-3 font-semibold">Email</th>
+                <th className="px-4 py-3 font-semibold">User</th>
                 <th className="px-4 py-3 font-semibold">Role</th>
                 <th className="px-4 py-3 font-semibold">Profile</th>
                 <th className="px-4 py-3 font-semibold">Status</th>
@@ -146,8 +156,11 @@ export default function AdminUsers() {
             <tbody className="divide-y divide-line">
               {data.items.map((u) => (
                 <tr key={u.id} className="hover:bg-cream">
-                  <td className="px-4 py-3 font-medium text-ink">{u.full_name}</td>
-                  <td className="px-4 py-3 text-muted">{u.email}</td>
+                  <td className="px-4 py-3 min-w-0">
+                    <div className="font-medium text-ink truncate">{u.full_name}</div>
+                    <div className="text-xs text-muted truncate">{u.email}</div>
+                    {u.citizen_id && <div className="text-xs font-mono text-brand-600 truncate">{u.citizen_id}</div>}
+                  </td>
                   <td className="px-4 py-3">
                     {u.role === 'admin'
                       ? <Chip tone="violet">{u.role_label || u.admin_role?.replace(/_/g, ' ') || 'Admin'}</Chip>

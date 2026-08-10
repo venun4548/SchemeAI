@@ -48,12 +48,30 @@ def sync_record(sheet: str, record: dict, id_column: str = "") -> None:
 def user_row(user) -> dict:
     return {
         "user_id": getattr(user, "id", ""),
+        "citizen_id": getattr(user, "citizen_id", ""),
         "full_name": getattr(user, "full_name", ""),
         "email": getattr(user, "email", ""),
         "phone": getattr(user, "phone", ""),
         "password_hash": getattr(user, "password_hash", ""),
         "status": "active" if getattr(user, "is_active", True) else "inactive",
         "created_at": (user.created_at.isoformat() if user.created_at else "") if hasattr(user, "created_at") else "",
+        "last_login": (user.last_login_at.isoformat() if user.last_login_at else "") if hasattr(user, "last_login_at") else "",
+    }
+
+
+def admin_row(user) -> dict:
+    return {
+        "admin_id": getattr(user, "id", ""),
+        "citizen_id": getattr(user, "citizen_id", ""),
+        "full_name": getattr(user, "full_name", ""),
+        "email": getattr(user, "email", ""),
+        "phone": getattr(user, "phone", ""),
+        "password_hash": getattr(user, "password_hash", ""),
+        "role": getattr(user, "admin_role", ""),
+        "status": "active" if getattr(user, "is_active", True) else "inactive",
+        "created_at": (user.created_at.isoformat() if user.created_at else "") if hasattr(user, "created_at") else "",
+        "last_login": (user.last_login_at.isoformat() if user.last_login_at else "") if hasattr(user, "last_login_at") else "",
+        "token": "",
     }
 
 
