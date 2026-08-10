@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { api } from '../../lib/api'
-import { useToast } from '../../context/ToastContext'
+import { api } from '../lib/api'
+import { useToast } from '../context/ToastContext'
 
 export default function ApplicationReadiness({ app, scheme, onPortalOpen }) {
   const [opening, setOpening] = useState(false)
