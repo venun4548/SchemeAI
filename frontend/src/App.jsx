@@ -29,6 +29,7 @@ import Family from './pages/app/Family'
 import News from './pages/app/News'
 import Notifications from './pages/app/Notifications'
 import Reports from './pages/app/Reports'
+import Support from './pages/app/Support'
 
 import AdminLayout from './layouts/AdminLayout'
 import AdminDashboard from './pages/admin/Dashboard'
@@ -48,7 +49,7 @@ import AdminSecurity from './pages/admin/Security'
 import AdminReports from './pages/admin/Reports'
 import AdminKnowledge from './pages/admin/Knowledge'
 import AdminAnalytics from './pages/admin/Analytics'
-import AdminRuns from './pages/admin/Runs'
+import AIOperations from './pages/admin/AIOperations'
 
 import NotFound from './pages/NotFound'
 import ChatWidget from './components/ChatWidget'
@@ -85,6 +86,7 @@ export default function App() {
             <Route path="/news" element={<News />} />
             <Route path="/notifications" element={<Notifications />} />
             <Route path="/reports" element={<Reports />} />
+            <Route path="/support" element={<Support />} />
             <Route path="/profile" element={<Profile />} />
             <Route path="/profile/security" element={<ProfileSecurity />} />
           </Route>
@@ -109,7 +111,7 @@ export default function App() {
             <Route path="/admin/users" element={<AdminUsers />} />
             <Route path="/admin/knowledge" element={<AdminKnowledge />} />
             <Route path="/admin/analytics" element={<AdminAnalytics />} />
-            <Route path="/admin/runs" element={<AdminRuns />} />
+            <Route path="/admin/runs" element={<AIOperations />} />
           </Route>
         </Route>
 

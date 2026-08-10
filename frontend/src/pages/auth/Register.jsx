@@ -41,7 +41,7 @@ export default function Register() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-cream grid lg:grid-cols-2">
+    <div className="min-h-[calc(100vh-4rem)] bg-cream flex items-center justify-center">
       {/* Sign-up form */}
       <div className="flex items-center justify-center px-4 py-12">
         <div className="w-full max-w-md">
@@ -91,15 +91,6 @@ export default function Register() {
         </div>
       </div>
 
-      {/* Family profile image slot */}
-      <div className="relative hidden lg:block min-h-[560px]">
-        <SmartImage slot="signup-side" fill />
-        <div className="absolute inset-0 flex flex-col justify-end p-10 bg-gradient-to-t from-ink/60 via-transparent to-transparent">
-          <p className="text-white/95 font-medium leading-relaxed max-w-sm text-sm">
-            One profile for the whole family — benefits in every language you speak.
-          </p>
-        </div>
-      </div>
     </div>
   )
 }

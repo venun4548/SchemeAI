@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import Spinner from '../../components/Spinner'
 import Alert from '../../components/Alert'
 import { ScoreRing, ScoreBar, statusBadge } from '../../components/Score'
+import BenefitJourney from '../../components/BenefitJourney'
 
 const AGENT_META = {
   'Profiling Agent': { icon: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z', color: 'bg-blue-500' },
@@ -178,8 +179,10 @@ export default function Dashboard() {
           </div>
         </div>
 
-        {/* Right: insights */}
+        {/* Right: insights & journey */}
         <div className="flex flex-col gap-5">
+          <BenefitJourney journey={data.journey} currentStage={data.current_stage} />
+
           <div className="card overflow-hidden">
             <PanelTitle title="Application plan" />
             <div className="p-4">

@@ -22,6 +22,7 @@ from app.agents.profile import derive
 from app.api.applications import _steps_for
 from app.api.deps import profile_to_dict, scheme_to_dict
 from app.models.models import (
+    AgentRun,
     Application,
     ChatLog,
     Conversation,
@@ -781,7 +782,7 @@ def _check_rate_limit(db: Session, user: User | None, ip: str) -> tuple[bool, st
 # Main entry point
 # --------------------------------------------------------------------------- #
 def run_chat(db: Session, message: str, user: User | None, conversation_id: str,
-             ip: str = "") -> dict:
+             ip: str = "", language: str = "en") -> dict:
     t_start = time.perf_counter()
     message = (message or "").strip()[:2000]
     allowed, limit_msg = _check_rate_limit(db, user, ip)
@@ -835,7 +836,9 @@ def run_chat(db: Session, message: str, user: User | None, conversation_id: str,
 
     polished = None
     if status == "success" and intent not in ("GREETING", "GENERAL", "UNKNOWN"):
-        polished = polish_reply(text)
+        polished = polish_reply(text, target_language=language)
+    elif status == "success" and language != "en":
+        polished = polish_reply(text, target_language=language)
     final_text = polished or text
 
     _log(db, user, conversation_id or "", intent, message, agents, status, error,
@@ -867,6 +870,20 @@ def _log(db: Session, user: User | None, conversation_id: str, intent: str, mess
             duration_ms=duration_ms,
             ip=ip[:64],
         ))
+        
+        now = datetime.now(timezone.utc)
+        for agent in agents:
+            db.add(AgentRun(
+                run_id=conversation_id or "chat",
+                user_id=user.id if user else "anonymous",
+                agent_name=agent["name"],
+                task=agent["task"],
+                status=status,
+                result={"detail": f"Handled in chat ({intent})"},
+                duration_ms=agent.get("duration_ms", 0),
+                created_at=now
+            ))
+            
         db.commit()
     except Exception:
         db.rollback()

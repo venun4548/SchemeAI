@@ -8,6 +8,11 @@ from app.core.security import get_current_user
 from app.database import get_db
 from app.models.models import QuestionnaireSession, User
 from app.seed.questionnaire import QUESTIONS, SUPPORTED_VOICE
+from app.services.llm import analyze_needs
+from pydantic import BaseModel
+
+class NeedRequest(BaseModel):
+    text: str
 
 router = APIRouter(prefix="/questionnaire", tags=["questionnaire"])
 
@@ -147,7 +152,21 @@ def reset(user: User = Depends(get_current_user), db: Session = Depends(get_db))
     s.answers = {}
     s.visited = []
     s.current_index = 0
-    s.progress = 0.0
     s.completed = False
     db.commit()
     return {"ok": True}
+
+@router.post("/needs/analyze")
+def analyze_user_needs(payload: NeedRequest, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    result = analyze_needs(payload.text)
+    
+    # Store this inside the user's questionnaire session answers
+    s = _get_session(db, user)
+    s.answers["need_category"] = result.get("category")
+    s.answers["need_subcategory"] = result.get("subcategory")
+    s.answers["raw_need_text"] = payload.text
+    
+    _save_progress(s)
+    db.commit()
+    
+    return result

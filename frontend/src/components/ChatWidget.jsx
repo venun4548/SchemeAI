@@ -32,6 +32,21 @@ const VOICE_LANGUAGES = [
   { code: 'mr', label: 'Marathi', lang: 'mr-IN' },
   { code: 'bn', label: 'Bengali', lang: 'bn-IN' },
   { code: 'gu', label: 'Gujarati', lang: 'gu-IN' },
+  { code: 'pa', label: 'Punjabi', lang: 'pa-IN' },
+  { code: 'ml', label: 'Malayalam', lang: 'ml-IN' },
+  { code: 'or', label: 'Odia', lang: 'or-IN' },
+  { code: 'as', label: 'Assamese', lang: 'as-IN' },
+  { code: 'ur', label: 'Urdu', lang: 'ur-IN' },
+  { code: 'sd', label: 'Sindhi', lang: 'sd-IN' },
+  { code: 'kok', label: 'Konkani', lang: 'kok-IN' },
+  { code: 'mni', label: 'Manipuri', lang: 'mni-IN' },
+  { code: 'ne', label: 'Nepali', lang: 'ne-IN' },
+  { code: 'brx', label: 'Bodo', lang: 'brx-IN' },
+  { code: 'doi', label: 'Dogri', lang: 'doi-IN' },
+  { code: 'ks', label: 'Kashmiri', lang: 'ks-IN' },
+  { code: 'mai', label: 'Maithili', lang: 'mai-IN' },
+  { code: 'sat', label: 'Santhali', lang: 'sat-IN' },
+  { code: 'sa', label: 'Sanskrit', lang: 'sa-IN' }
 ]
 
 function RichText({ text }) {
@@ -147,7 +162,11 @@ export default function ChatWidget() {
     setStepIdx(0)
     stepTimerRef.current = setInterval(() => setStepIdx((i) => (i + 1) % THINKING_STEPS.length), 1400)
     try {
-      const res = await api.post('/chat', { message: t, conversation_id: conversationId })
+      const res = await api.post('/chat', { 
+        message: t, 
+        conversation_id: conversationId,
+        context: { language: voiceLang }
+      })
       if (res.conversation_id) {
         setConversationId(res.conversation_id)
         localStorage.setItem(STORAGE_KEY, res.conversation_id)

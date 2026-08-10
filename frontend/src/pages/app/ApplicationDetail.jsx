@@ -5,6 +5,7 @@ import Spinner from '../../components/Spinner'
 import Alert from '../../components/Alert'
 import { statusBadge } from '../../components/Score'
 import { useToast } from '../../context/ToastContext'
+import ApplicationReadiness from '../../components/ApplicationReadiness'
 
 export default function ApplicationDetail() {
   const { id } = useParams()
@@ -146,6 +147,8 @@ export default function ApplicationDetail() {
               <ul className="list-disc pl-4 space-y-1">{app.risk_flags.map((r, i) => <li key={i}>{r}</li>)}</ul>
             </Alert>
           )}
+
+          <ApplicationReadiness app={app} onPortalOpen={load} />
 
           <Link to="/applications" className="btn-secondary w-full">← All applications</Link>
         </div>

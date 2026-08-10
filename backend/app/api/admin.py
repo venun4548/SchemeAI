@@ -388,13 +388,48 @@ def resolve_feedback(fid: str, data: FeedbackResolveIn, db: Session = Depends(ge
 
 @router.get("/agent-runs")
 def agent_runs(db: Session = Depends(get_db), user: User = Depends(require_permission("ai.view"))):
-    runs = db.query(AgentRun).order_by(AgentRun.created_at.desc()).limit(40).all()
+    runs = db.query(AgentRun).order_by(AgentRun.created_at.desc()).limit(100).all()
     return {"items": [
         {"id": r.id, "agent": r.agent_name, "task": r.task, "status": r.status,
          "duration_ms": r.duration_ms,
          "created_at": r.created_at.isoformat() if r.created_at else None}
         for r in runs
     ]}
+
+
+@router.get("/agents/health")
+def agents_health(db: Session = Depends(get_db), user: User = Depends(require_permission("ai.view"))):
+    now = datetime.now(timezone.utc)
+    day_ago = now - timedelta(days=1)
+    
+    recent_runs = db.query(AgentRun).filter(AgentRun.created_at >= day_ago).all()
+    
+    # Calculate health metrics
+    total = len(recent_runs)
+    success = len([r for r in recent_runs if r.status == "completed" or r.status == "success"])
+    errors = total - success
+    
+    # Agent breakdown
+    agent_stats = {}
+    for r in recent_runs:
+        if r.agent_name not in agent_stats:
+            agent_stats[r.agent_name] = {"total": 0, "success": 0, "avg_duration": 0, "sum_duration": 0}
+        agent_stats[r.agent_name]["total"] += 1
+        if r.status == "completed" or r.status == "success":
+            agent_stats[r.agent_name]["success"] += 1
+        agent_stats[r.agent_name]["sum_duration"] += r.duration_ms
+        
+    for name, stat in agent_stats.items():
+        stat["avg_duration"] = round(stat["sum_duration"] / stat["total"]) if stat["total"] > 0 else 0
+        stat["error_rate"] = round(100 * (1 - stat["success"] / stat["total"]), 1) if stat["total"] > 0 else 0
+        
+    return {
+        "overall_health": "Healthy" if errors == 0 else "Degraded" if (errors/total < 0.1) else "Critical",
+        "total_runs_24h": total,
+        "success_rate": round(100 * success / total, 1) if total > 0 else 100.0,
+        "average_latency_ms": round(sum(r.duration_ms for r in recent_runs) / total) if total > 0 else 0,
+        "agents": agent_stats
+    }
 
 
 @router.get("/export/schemes")

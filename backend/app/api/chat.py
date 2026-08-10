@@ -25,12 +25,14 @@ def chat(
     user: User | None = Depends(get_optional_user),
     db: Session = Depends(get_db),
 ):
+    lang = data.context.get("language", "en") if data.context else "en"
     result = run_chat(
         db=db,
         message=data.message,
         user=user,
         conversation_id=(data.conversation_id or "").strip(),
         ip=_client_ip(request),
+        language=lang,
     )
     if not result["success"] and result.get("intent") == "RATE_LIMITED":
         raise HTTPException(status_code=429, detail=result["message"])

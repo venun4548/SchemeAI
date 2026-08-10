@@ -4,6 +4,7 @@ import { api } from '../../lib/api'
 import Spinner from '../../components/Spinner'
 import Alert from '../../components/Alert'
 import { useToast } from '../../context/ToastContext'
+import NeedsDiscovery from './NeedsDiscovery'
 
 function Field({ q, value, onChange }) {
   if (q.kind === 'select') {
@@ -71,6 +72,7 @@ export default function Questionnaire() {
   const [value, setValue] = useState(null)
   const [busy, setBusy] = useState(false)
   const [error, setError] = useState('')
+  const [needsCompleted, setNeedsCompleted] = useState(false)
   const toast = useToast()
   const navigate = useNavigate()
 
@@ -137,6 +139,10 @@ export default function Questionnaire() {
       )
     }
     return <Spinner label="Preparing your interview…" />
+  }
+
+  if (!needsCompleted && state.progress === 0) {
+    return <NeedsDiscovery onComplete={() => setNeedsCompleted(true)} />
   }
 
   return (

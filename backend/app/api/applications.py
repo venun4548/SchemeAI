@@ -16,6 +16,10 @@ from app.core.security import get_current_user
 from app.database import get_db
 from app.models.models import AnalyticsEvent, Application, Scheme, User
 from app.schemas.schemas import ApplyIn, StatusIn
+from pydantic import BaseModel
+
+class ReadOfficialIn(BaseModel):
+    scheme_id: str
 from app.services.notify import notify
 from app.services.qr_service import application_qr_payload, make_qr
 
@@ -112,6 +116,16 @@ def apply(data: ApplyIn, user: User = Depends(get_current_user), db: Session = D
 
     return _app_out(app, with_qr=True)
 
+
+@router.post("/read_official")
+def read_official_portal(data: ReadOfficialIn, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    db.add(AnalyticsEvent(
+        user_id=user.id, 
+        event_type="open_official_portal", 
+        scheme_id=data.scheme_id
+    ))
+    db.commit()
+    return {"ok": True}
 
 @router.get("")
 def list_applications(user: User = Depends(get_current_user), db: Session = Depends(get_db)):

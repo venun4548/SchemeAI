@@ -17,6 +17,9 @@ from app.models.models import (
     SavedScheme,
     Scheme,
     User,
+    SupportCase,
+    EligibilityEvaluation,
+    AnalyticsEvent,
 )
 from app.schemas.schemas import FeedbackIn
 
@@ -51,11 +54,55 @@ def dashboard_home(user: User = Depends(get_current_user), db: Session = Depends
     news = db.query(NewsItem).filter_by(is_new=True).order_by(NewsItem.published_at.desc()).limit(4).all()
 
     family = db.query(FamilyMember).filter_by(user_id=user.id).count()
+    
+    support_cases = db.query(SupportCase).filter_by(user_id=user.id).count()
+    eligibility_checks = db.query(EligibilityEvaluation).filter_by(user_id=user.id).count()
+    official_clicks = db.query(AnalyticsEvent).filter_by(user_id=user.id, event_type="open_official_portal").count()
+    
+    profile_completeness = round(sum(1 for f in ["age", "gender", "state", "occupation", "annual_income", "education"]
+                                       if profile.get(f) not in (None, "", 0, False)) / 6 * 100)
+    
+    # Calculate journey stages
+    journey = {
+        "profile_created": profile_completeness > 0,
+        "needs_identified": bool(profile.get("occupation") or profile.get("annual_income")),
+        "schemes_discovered": bool(top),
+        "eligibility_checked": eligibility_checks > 0,
+        "eligibility_explained": eligibility_checks > 0,
+        "documents_checked": len(uploaded_docs) > 0,
+        "application_ready": len(uploaded_docs) >= 1 and eligibility_checks > 0,
+        "official_application": official_clicks > 0,
+        "track_status": len(apps) > 0,
+        "support": support_cases > 0,
+        "notifications": notifications_count > 0 if 'notifications_count' in locals() else len(notifications) > 0,
+    }
+    
+    # Determine current stage string based on logic order
+    current_stage = "CREATE PROFILE"
+    if not journey["profile_created"] or profile_completeness < 100:
+        current_stage = "CREATE PROFILE"
+    elif not journey["needs_identified"]:
+        current_stage = "UNDERSTAND NEEDS"
+    elif not journey["schemes_discovered"]:
+        current_stage = "DISCOVER SCHEMES"
+    elif not journey["eligibility_checked"]:
+        current_stage = "CHECK ELIGIBILITY"
+    elif not journey["documents_checked"]:
+        current_stage = "CHECK DOCUMENTS"
+    elif not journey["application_ready"]:
+        current_stage = "APPLICATION READY"
+    elif not journey["official_application"]:
+        current_stage = "OFFICIAL APPLICATION"
+    elif not journey["track_status"]:
+        current_stage = "TRACK STATUS"
+    else:
+        current_stage = "TRACK STATUS"
 
     return {
         "profile": profile,
-        "profile_completeness": round(sum(1 for f in ["age", "gender", "state", "occupation", "annual_income", "education"]
-                                           if profile.get(f) not in (None, "", 0, False)) / 6 * 100),
+        "profile_completeness": profile_completeness,
+        "journey": journey,
+        "current_stage": current_stage,
         "top_score": top,
         "average_score": avg,
         "counts": {
