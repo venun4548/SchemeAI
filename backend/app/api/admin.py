@@ -112,6 +112,14 @@ def list_users(db: Session = Depends(get_db), user: User = Depends(require_permi
     return {"items": [admin_to_dict(u) for u in users], "total": len(users)}
 
 
+@router.get("/users/{user_id}")
+def get_user(user_id: str, db: Session = Depends(get_db), user: User = Depends(require_permission("users.view"))):
+    u = db.get(User, user_id)
+    if not u:
+        raise HTTPException(status_code=404, detail="User not found")
+    return admin_to_dict(u)
+
+
 @router.post("/users", status_code=201)
 def create_user(data: AdminUserCreate, request: Request,
                 db: Session = Depends(get_db), user: User = Depends(require_permission("admins.create"))):
