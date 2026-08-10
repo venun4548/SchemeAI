@@ -48,7 +48,7 @@ def sync_record(sheet: str, record: dict, id_column: str = "") -> None:
 def user_row(user) -> dict:
     p = getattr(user, "profile", None)
     return {
-        "user_id": getattr(user, "citizen_id", getattr(user, "id", "")),
+        "user_id": getattr(user, "citizen_id", None) or getattr(user, "id", ""),
         "citizen_id": getattr(user, "citizen_id", ""),
         "full_name": getattr(user, "full_name", ""),
         "email": getattr(user, "email", ""),
@@ -67,7 +67,7 @@ def user_row(user) -> dict:
 
 def admin_row(user) -> dict:
     return {
-        "admin_id": getattr(user, "citizen_id", getattr(user, "id", "")),
+        "admin_id": getattr(user, "citizen_id", None) or getattr(user, "id", ""),
         "citizen_id": getattr(user, "citizen_id", ""),
         "full_name": getattr(user, "full_name", ""),
         "email": getattr(user, "email", ""),
