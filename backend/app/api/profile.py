@@ -25,6 +25,10 @@ def update_profile(data: ProfileIn, user: User = Depends(get_current_user), db: 
         setattr(p, k, v)
     db.commit()
     db.refresh(p)
+    
+    from app.services.sheets_sync import sync_record, user_row
+    sync_record("Users", user_row(user), id_column="user_id")
+    
     return profile_to_dict(p)
 
 

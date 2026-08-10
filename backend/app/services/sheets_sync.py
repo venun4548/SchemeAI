@@ -46,8 +46,9 @@ def sync_record(sheet: str, record: dict, id_column: str = "") -> None:
 # Row builders - map backend records to the GAS Database.gs column layouts.
 # --------------------------------------------------------------------------- #
 def user_row(user) -> dict:
+    p = getattr(user, "profile", None)
     return {
-        "user_id": getattr(user, "id", ""),
+        "user_id": getattr(user, "citizen_id", getattr(user, "id", "")),
         "citizen_id": getattr(user, "citizen_id", ""),
         "full_name": getattr(user, "full_name", ""),
         "email": getattr(user, "email", ""),
@@ -56,12 +57,17 @@ def user_row(user) -> dict:
         "status": "active" if getattr(user, "is_active", True) else "inactive",
         "created_at": (user.created_at.isoformat() if user.created_at else "") if hasattr(user, "created_at") else "",
         "last_login": (user.last_login_at.isoformat() if user.last_login_at else "") if hasattr(user, "last_login_at") else "",
+        "state": getattr(p, "state", "") if p else "",
+        "district": getattr(p, "district", "") if p else "",
+        "annual_income": getattr(p, "annual_income", "") if p else "",
+        "gender": getattr(p, "gender", "") if p else "",
+        "category": getattr(p, "category", "") if p else "",
     }
 
 
 def admin_row(user) -> dict:
     return {
-        "admin_id": getattr(user, "id", ""),
+        "admin_id": getattr(user, "citizen_id", getattr(user, "id", "")),
         "citizen_id": getattr(user, "citizen_id", ""),
         "full_name": getattr(user, "full_name", ""),
         "email": getattr(user, "email", ""),
@@ -78,7 +84,7 @@ def admin_row(user) -> dict:
 def application_row(app) -> dict:
     return {
         "application_id": getattr(app, "application_id", ""),
-        "user_id": getattr(app, "user_id", ""),
+        "user_id": app.user.citizen_id if getattr(app, "user", None) else getattr(app, "user_id", ""),
         "scheme_id": getattr(app, "scheme_id", ""),
         "status": getattr(app, "status", ""),
         "priority": getattr(app, "priority", "normal"),
@@ -90,7 +96,7 @@ def application_row(app) -> dict:
 def document_row(doc) -> dict:
     return {
         "document_id": getattr(doc, "id", ""),
-        "user_id": getattr(doc, "user_id", ""),
+        "user_id": doc.user.citizen_id if getattr(doc, "user", None) else getattr(doc, "user_id", ""),
         "document_type": getattr(doc, "doc_type", ""),
         "status": getattr(doc, "status", ""),
         "uploaded_at": (doc.uploaded_at.isoformat() if doc.uploaded_at else "") if hasattr(doc, "uploaded_at") else "",
@@ -101,7 +107,7 @@ def document_row(doc) -> dict:
 def notification_row(n) -> dict:
     return {
         "notification_id": getattr(n, "id", ""),
-        "user_id": getattr(n, "user_id", ""),
+        "user_id": n.user.citizen_id if getattr(n, "user", None) else getattr(n, "user_id", ""),
         "type": getattr(n, "type", ""),
         "title": getattr(n, "title", ""),
         "message": getattr(n, "body", ""),
@@ -113,7 +119,7 @@ def notification_row(n) -> dict:
 def audit_row(log) -> dict:
     return {
         "audit_id": getattr(log, "id", ""),
-        "admin_id": getattr(log, "actor_id", ""),
+        "admin_id": log.actor.citizen_id if getattr(log, "actor", None) else getattr(log, "actor_id", ""),
         "role": getattr(log, "actor_role", ""),
         "action": getattr(log, "action", ""),
         "entity_type": getattr(log, "entity", ""),
@@ -128,7 +134,7 @@ def audit_row(log) -> dict:
 def support_case_row(c) -> dict:
     return {
         "case_id": getattr(c, "id", ""),
-        "user_id": getattr(c, "user_id", ""),
+        "user_id": c.user.citizen_id if getattr(c, "user", None) else getattr(c, "user_id", ""),
         "subject": getattr(c, "subject", ""),
         "category": getattr(c, "issue_type", ""),
         "description": getattr(c, "description", ""),
