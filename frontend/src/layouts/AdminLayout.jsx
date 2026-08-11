@@ -2,7 +2,7 @@ import { NavLink, Outlet, Link } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useToast } from '../context/ToastContext'
 import { useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import ProfileMenu from '../components/ProfileMenu'
 
 const allNavGroups = [
@@ -69,6 +69,12 @@ export default function AdminLayout() {
   const toast = useToast()
   const navigate = useNavigate()
   const [open, setOpen] = useState(false)
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => setCurrentTime(new Date()), 1000)
+    return () => clearInterval(timer)
+  }, [])
 
   const linkCls = ({ isActive }) =>
     `flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition ${
@@ -118,6 +124,9 @@ export default function AdminLayout() {
             <span className="chip bg-white/15 text-white hidden sm:inline-flex">Enterprise Portal</span>
           </div>
           <div className="flex items-center gap-3 text-sm shrink-0">
+            <div className="hidden lg:block text-white/90 font-medium">
+              {currentTime.toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })}
+            </div>
             <ProfileMenu admin />
           </div>
         </div>
