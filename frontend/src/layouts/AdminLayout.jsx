@@ -13,7 +13,6 @@ const allNavGroups = [
       { to: '/admin', label: 'Command Center', end: true, icon: '◉', roles: ['SUPER_ADMIN', 'OPERATIONS_ADMIN'] },
       { to: '/admin/applications', label: 'Applications', icon: '▤', roles: ['SUPER_ADMIN', 'OPERATIONS_ADMIN'] },
       { to: '/admin/documents', label: 'Document Review', icon: '🗎', roles: ['SUPER_ADMIN', 'OPERATIONS_ADMIN'] },
-      { to: '/admin/cases', label: 'Issues & Escalations', icon: '☰', roles: ['SUPER_ADMIN', 'OPERATIONS_ADMIN'] },
     ],
   },
   {
