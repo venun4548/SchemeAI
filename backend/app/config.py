@@ -1,6 +1,7 @@
 import os
 from pathlib import Path
 from pydantic_settings import BaseSettings
+from pydantic import field_validator
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -56,6 +57,13 @@ class Settings(BaseSettings):
         "http://127.0.0.1:5173",
         "https://scheme-ai-nine.vercel.app",
     ]
+
+    @field_validator("CORS_ORIGINS", mode="before")
+    @classmethod
+    def assemble_cors_origins(cls, v: str | list[str]) -> list[str]:
+        if isinstance(v, str) and not v.startswith("["):
+            return [i.strip() for i in v.split(",")]
+        return v
 
     class Config:
         env_file = str(BASE_DIR / ".env")
