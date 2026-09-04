@@ -57,14 +57,6 @@ export default function Header() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <button
-            onClick={toggle}
-            className="btn-ghost !px-2.5 !py-2"
-            aria-label="Toggle dark mode"
-            title="Toggle theme"
-          >
-            {dark ? '☀️' : '🌙'}
-          </button>
           {user ? (
             <>
               <Link to="/dashboard" className="btn-primary hidden sm:inline-flex">

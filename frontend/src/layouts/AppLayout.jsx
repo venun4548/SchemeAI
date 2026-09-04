@@ -51,11 +51,17 @@ export default function AppLayout() {
           Admin
         </NavLink>
       )}
+      <a href="https://scheme-ai-nine.vercel.app/" className="flex items-center gap-3 px-3 py-2 rounded-lg text-sm font-medium transition text-muted hover:bg-brand-50 hover:text-brand-700 mt-auto">
+        <svg viewBox="0 0 24 24" className="h-5 w-5 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+        Back to website
+      </a>
     </nav>
   )
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream">
+    <div className="h-screen flex flex-col bg-cream overflow-hidden">
       <header className="sticky top-0 z-40 bg-white/90 backdrop-blur border-b border-line">
         <div className="h-16 px-4 sm:px-6 flex items-center justify-between gap-4">
           <div className="flex items-center gap-3">
@@ -79,16 +85,13 @@ export default function AppLayout() {
             </Link>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={toggle} className="btn-ghost !px-2.5" aria-label="Toggle theme">
-              {dark ? '☀️' : '🌙'}
-            </button>
             <ProfileMenu />
           </div>
         </div>
       </header>
 
       <div className="flex flex-1 min-h-0">
-        <aside className="hidden lg:flex w-60 flex-col border-r border-line bg-white shrink-0">{sidebar}</aside>
+        <aside className="hidden lg:flex w-60 h-full flex-col border-r border-line bg-white shrink-0 overflow-y-auto scrollbar-thin">{sidebar}</aside>
 
         {open && (
           <div className="fixed inset-0 z-50 lg:hidden">
@@ -103,7 +106,7 @@ export default function AppLayout() {
           </div>
         )}
 
-        <main className="flex-1 min-w-0">
+        <main className="flex-1 min-w-0 h-full overflow-y-auto">
           <Outlet />
         </main>
       </div>

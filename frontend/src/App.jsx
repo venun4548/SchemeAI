@@ -52,7 +52,6 @@ import AdminAnalytics from './pages/admin/Analytics'
 import AIOperations from './pages/admin/AIOperations'
 
 import NotFound from './pages/NotFound'
-import ChatWidget from './components/ChatWidget'
 
 export default function App() {
   return (
@@ -117,7 +116,6 @@ export default function App() {
 
         <Route path="*" element={<NotFound />} />
       </Routes>
-      <ChatWidget />
     </>
   )
 }

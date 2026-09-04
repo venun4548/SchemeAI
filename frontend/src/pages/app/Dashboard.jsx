@@ -6,6 +6,7 @@ import Spinner from '../../components/Spinner'
 import Alert from '../../components/Alert'
 import { ScoreRing, ScoreBar, statusBadge } from '../../components/Score'
 import BenefitJourney from '../../components/BenefitJourney'
+import ChatWidget from '../../components/ChatWidget'
 
 const AGENT_META = {
   'Profiling Agent': { icon: 'M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0zM12 14a7 7 0 0 0-7 7h14a7 7 0 0 0-7-7z', color: 'bg-blue-500' },
@@ -294,6 +295,7 @@ export default function Dashboard() {
           </div>
         </div>
       )}
+      <ChatWidget />
     </div>
   )
 }

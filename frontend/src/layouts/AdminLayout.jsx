@@ -93,7 +93,7 @@ export default function AdminLayout() {
   }).filter(g => g.links.length > 0)
 
   const Sidebar = (
-    <aside className="w-64 flex-shrink-0 border-r border-line bg-white overflow-y-auto scrollbar-thin p-3 space-y-5">
+    <aside className="h-full w-64 flex flex-col flex-shrink-0 border-r border-line bg-white overflow-y-auto scrollbar-thin p-3 space-y-5">
       <div className="px-3 pt-1">
         <div className="text-lg font-bold text-ink">SchemeAI Ops</div>
         <div className={`chip mt-2 capitalize ${ROLE_BADGES[currentRole] || 'bg-cream text-muted'}`}>{roleLabel}</div>
@@ -111,11 +111,17 @@ export default function AdminLayout() {
           </div>
         </div>
       ))}
+      <a href="https://scheme-ai-nine.vercel.app/" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm font-medium transition text-muted hover:bg-brand-50 hover:text-brand-700 mt-auto">
+        <svg viewBox="0 0 24 24" className="h-4 w-4 shrink-0" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <path d="M19 12H5M12 19l-7-7 7-7" />
+        </svg>
+        Back to website
+      </a>
     </aside>
   )
 
   return (
-    <div className="min-h-screen flex flex-col bg-cream">
+    <div className="h-screen flex flex-col bg-cream overflow-hidden">
       <header className="sticky top-0 z-40 bg-brand text-white shadow-sm">
         <div className="h-14 px-4 sm:px-6 flex items-center justify-between gap-3">
           <div className="flex items-center gap-3 min-w-0">
@@ -138,8 +144,8 @@ export default function AdminLayout() {
       </header>
 
       <div className="flex flex-1 min-h-0">
-        <div className="hidden md:block">{Sidebar}</div>
-        <main className="flex-1 min-w-0">
+        <div className="hidden md:block h-full">{Sidebar}</div>
+        <main className="flex-1 min-w-0 h-full overflow-y-auto">
           <Outlet />
         </main>
       </div>
