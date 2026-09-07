@@ -1,6 +1,7 @@
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Spinner from './Spinner'
+import AdminSecurityModal from './AdminSecurityModal'
 
 const ADMIN_ROLES = [
   'SUPER_ADMIN',
@@ -21,6 +22,14 @@ export function ProtectedRoute({ admin = false }) {
   
   if (admin && !ADMIN_ROLES.includes(user.role)) {
     return <Navigate to="/dashboard" replace />
+  }
+
+  if (admin && !user.secondary_verified) {
+    return (
+      <div className="min-h-screen bg-cream flex items-center justify-center p-4">
+        <AdminSecurityModal />
+      </div>
+    )
   }
   
   return <Outlet />

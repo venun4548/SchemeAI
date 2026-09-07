@@ -15,10 +15,11 @@ const ROLE_MAP = {
 
 function normalizeUser(u) {
   if (!u) return u
+  const secVerified = u.secondary_verified !== undefined ? Boolean(u.secondary_verified) : (u.role !== 'admin')
   if (u.role === 'admin') {
-    return { ...u, role: ROLE_MAP[u.admin_role] || 'ADMIN' }
+    return { ...u, role: ROLE_MAP[u.admin_role] || 'ADMIN', secondary_verified: secVerified }
   }
-  return { ...u, role: 'CITIZEN' }
+  return { ...u, role: 'CITIZEN', secondary_verified: true }
 }
 
 export function AuthProvider({ children }) {
@@ -56,6 +57,19 @@ export function AuthProvider({ children }) {
     return u
   }, [])
 
+  const verifySecondary = useCallback(async (pin) => {
+    const res = await api.post('/auth/verify-secondary', { pin })
+    setToken(res.access_token)
+    const u = normalizeUser(res.user)
+    setUser(u)
+    return u
+  }, [])
+
+  const cancelSecondary = useCallback(() => {
+    setToken(null)
+    setUser(null)
+  }, [])
+
   const register = useCallback(async (payload) => {
     const res = await api.post('/auth/register', payload)
     setToken(res.access_token)
@@ -91,8 +105,8 @@ export function AuthProvider({ children }) {
   }, [logout])
 
   const value = useMemo(
-    () => ({ user, setUser, loading, login, register, logout, refresh }),
-    [user, loading, login, register, logout, refresh],
+    () => ({ user, setUser, loading, login, verifySecondary, cancelSecondary, register, logout, refresh }),
+    [user, loading, login, verifySecondary, cancelSecondary, register, logout, refresh],
   )
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

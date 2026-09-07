@@ -35,6 +35,7 @@ class User(Base):
     email: Mapped[str] = mapped_column(String(255), unique=True, index=True)
     phone: Mapped[str] = mapped_column(String(20), default="")
     password_hash: Mapped[str] = mapped_column(String(255))
+    secondary_password_hash: Mapped[str | None] = mapped_column(String(255), nullable=True)
     full_name: Mapped[str] = mapped_column(String(120))
     role: Mapped[str] = mapped_column(String(20), default="citizen")  # citizen | admin
     admin_role: Mapped[str] = mapped_column(String(30), default="operations_admin")

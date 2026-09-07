@@ -132,6 +132,11 @@ CANONICAL_TO_INTERNAL = {
 def require_admin(user: User = Depends(get_current_user)) -> User:
     if user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
+    if not getattr(user, "secondary_verified", False):
+        raise HTTPException(
+            status_code=403,
+            detail="Admin secondary security verification required. Access denied."
+        )
     return user
 
 
@@ -152,6 +157,10 @@ def has_permission(user: User, perm: str) -> bool:
             if g.endswith(".*") and t.startswith(g[:-1]):
                 return True
     return False
+
+
+def get_role_permissions(admin_role: str) -> list[str]:
+    return sorted(list(PERMISSIONS.get(admin_role, set())))
 
 
 def require_permission(perm: str):

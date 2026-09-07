@@ -51,12 +51,13 @@ def verify_password(password: str, stored: str) -> bool:
         return False
 
 
-def create_access_token(user: User) -> str:
+def create_access_token(user: User, secondary_verified: bool = False) -> str:
     now = datetime.now(timezone.utc)
     payload = {
         "sub": user.id,
         "email": user.email,
         "role": user.role,
+        "secondary_verified": secondary_verified,
         "iat": now,
         "exp": now + timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES),
         "jti": secrets.token_hex(8),
@@ -100,6 +101,8 @@ def get_current_user(
         if iat_dt < valid_after:
             raise HTTPException(status_code=401, detail="Session expired")
             
+    # Attach transient token claims to user object
+    user.secondary_verified = payload.get("secondary_verified", False)
     return user
 
 
@@ -131,10 +134,16 @@ def get_optional_user(
         if iat_dt < valid_after:
             return None
             
+    user.secondary_verified = payload.get("secondary_verified", False)
     return user
 
 
 def require_admin(user: User = Depends(get_current_user)) -> User:
     if user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
+    if not getattr(user, "secondary_verified", False):
+        raise HTTPException(
+            status_code=403,
+            detail="Admin secondary security verification required. Access denied."
+        )
     return user

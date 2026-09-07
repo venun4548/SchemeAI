@@ -12,7 +12,7 @@ from app.core.security import (
 )
 from app.database import get_db
 from app.models.models import LoginAttempt, Profile, User
-from app.schemas.schemas import LoginIn, RegisterIn, TokenOut
+from app.schemas.schemas import LoginIn, RegisterIn, TokenOut, VerifyAdminPinIn
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -55,7 +55,7 @@ def register(data: RegisterIn, db: Session = Depends(get_db)):
     from app.services.sheets_sync import sync_record, user_row
     sync_record("Users", user_row(user), id_column="user_id")
 
-    return TokenOut(access_token=create_access_token(user), user=user_to_dict(user))
+    return TokenOut(access_token=create_access_token(user, secondary_verified=True), user=user_to_dict(user))
 
 
 @router.post("/login", response_model=TokenOut)
@@ -75,10 +75,29 @@ def login(data: LoginIn, request: Request, db: Session = Depends(get_db)):
     from app.services.sheets_sync import sync_record, user_row, admin_row
     if user.role == "admin":
         sync_record("Admins", admin_row(user), id_column="admin_id")
+        user.secondary_verified = False
+        token = create_access_token(user, secondary_verified=False)
     else:
         sync_record("Users", user_row(user), id_column="user_id")
+        user.secondary_verified = True
+        token = create_access_token(user, secondary_verified=True)
 
-    return TokenOut(access_token=create_access_token(user), user=user_to_dict(user))
+    return TokenOut(access_token=token, user=user_to_dict(user))
+
+
+@router.post("/verify-secondary", response_model=TokenOut)
+def verify_secondary(data: VerifyAdminPinIn, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    if user.role != "admin":
+        raise HTTPException(status_code=403, detail="Admin access required")
+
+    target_hash = user.secondary_password_hash or hash_password("123456")
+    if not verify_password(data.pin, target_hash):
+        _log_attempt(db, user.email, False, request, reason="invalid_secondary_pin")
+        raise HTTPException(status_code=401, detail="Invalid security PIN/password. Access denied.")
+
+    _log_attempt(db, user.email, True, request, reason="secondary_pin_success")
+    user.secondary_verified = True
+    return TokenOut(access_token=create_access_token(user, secondary_verified=True), user=user_to_dict(user))
 
 
 @router.get("/me")

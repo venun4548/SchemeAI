@@ -46,6 +46,7 @@ _NEW_COLUMNS = {
     "users": [
         ("admin_role", "VARCHAR(30) DEFAULT 'operations_admin' NOT NULL"),
         ("last_login_at", "DATETIME"),
+        ("secondary_password_hash", "VARCHAR(255)"),
     ],
     "schemes": [
         ("lifecycle_status", "VARCHAR(20) DEFAULT 'published' NOT NULL"),

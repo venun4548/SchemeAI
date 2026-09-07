@@ -22,6 +22,10 @@ class LoginIn(BaseModel):
     password: str
 
 
+class VerifyAdminPinIn(BaseModel):
+    pin: str = Field(min_length=1, max_length=64)
+
+
 class AdminUserCreate(BaseModel):
     full_name: str = Field(min_length=2, max_length=120)
     email: EmailStr

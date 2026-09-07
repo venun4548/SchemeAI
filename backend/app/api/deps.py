@@ -44,11 +44,13 @@ def scheme_to_dict(s: Scheme, include_rules: bool = True) -> dict:
 
 
 def user_to_dict(u: User) -> dict:
+    sec_verified = getattr(u, "secondary_verified", False) if u.role == "admin" else True
     return {
         "id": u.id, "citizen_id": u.citizen_id, "email": u.email, "phone": u.phone, "full_name": u.full_name,
         "role": u.role, "language": u.language, "is_verified": u.is_verified,
         "is_active": u.is_active,
         "admin_role": u.admin_role,
+        "secondary_verified": sec_verified,
         "last_login_at": u.last_login_at.isoformat() if u.last_login_at else None,
         "created_at": u.created_at.isoformat() if u.created_at else None,
         "profile": profile_to_dict(u.profile),
