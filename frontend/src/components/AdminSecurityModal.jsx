@@ -127,7 +127,6 @@ export default function AdminSecurityModal({ onSuccess, onCancel }) {
 
         <div className="mt-5 pt-4 border-t border-line text-xs text-muted flex items-center justify-between">
           <span>Logged in as: <strong className="text-ink font-semibold">{user?.email}</strong></span>
-          <span className="font-mono text-muted/80">Default PIN: 123456</span>
         </div>
       </div>
     </div>
