@@ -9,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.api.deps import scheme_to_dict
 from app.core.rbac import admin_to_dict, has_permission, require_admin, require_permission
-from app.core.security import hash_password, generate_citizen_id
+from app.core.security import hash_password, generate_citizen_id, get_current_user
 from app.database import get_db
 from app.models.models import (
     AgentRun,
@@ -26,7 +26,7 @@ from app.models.models import (
     TokenBlocklist,
 )
 from app.rag.vector_store import RAGStore
-from app.schemas.schemas import AdminUserCreate, BroadcastIn, FeedbackResolveIn, KnowledgeIn, NewsIn
+from app.schemas.schemas import AdminUserCreate, BroadcastIn, FeedbackResolveIn, KnowledgeIn, NewsIn, TokenOut, VerifyAdminPinIn
 from app.services.audit import audit
 from fastapi.security import HTTPAuthorizationCredentials
 from app.core.security import decode_token, _bearer
@@ -271,6 +271,13 @@ def verify_user(user_id: str, request: Request,
     audit(db, user, "user.verified", "user", user_id, entity_name=u.email,
           new_value={"is_verified": True}, ip=_ip(request))
     return {"ok": True}
+
+
+@router.post("/verify-secondary", response_model=TokenOut)
+@router.post("/verify-secondary/", response_model=TokenOut)
+def admin_verify_secondary(data: VerifyAdminPinIn, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+    from app.api.auth import verify_secondary
+    return verify_secondary(data=data, request=request, user=user, db=db)
 
 
 # ------------------------------ Applications ------------------------------ #

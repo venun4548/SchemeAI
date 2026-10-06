@@ -10,11 +10,13 @@ from app.core.security import (
     verify_password,
     generate_citizen_id,
 )
+from app.config import settings
 from app.database import get_db
 from app.models.models import LoginAttempt, Profile, User
 from app.schemas.schemas import LoginIn, RegisterIn, TokenOut, VerifyAdminPinIn
 
 router = APIRouter(prefix="/auth", tags=["auth"])
+
 
 
 def _client_ip(request: Request) -> str:
@@ -86,12 +88,14 @@ def login(data: LoginIn, request: Request, db: Session = Depends(get_db)):
 
 
 @router.post("/verify-secondary", response_model=TokenOut)
+@router.post("/verify-secondary/", response_model=TokenOut)
 def verify_secondary(data: VerifyAdminPinIn, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
     if user.role != "admin":
         raise HTTPException(status_code=403, detail="Admin access required")
 
-    target_hash = user.secondary_password_hash or hash_password("123456")
-    is_valid = verify_password(data.pin, target_hash) or (data.pin in ("123456", "7788"))
+    configured_pin = settings.ADMIN_SECONDARY_PIN
+    target_hash = user.secondary_password_hash or hash_password(configured_pin)
+    is_valid = verify_password(data.pin, target_hash) or (data.pin == configured_pin)
     if not is_valid:
         _log_attempt(db, user.email, False, request, reason="invalid_secondary_pin")
         raise HTTPException(status_code=401, detail="Invalid security PIN/password. Access denied.")

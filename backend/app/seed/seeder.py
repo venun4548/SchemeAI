@@ -6,6 +6,7 @@ from datetime import datetime, timedelta, timezone
 
 from sqlalchemy.orm import Session
 
+from app.config import settings
 from app.core.security import hash_password
 from app.models.models import (
     AgentRun,
@@ -168,13 +169,14 @@ def seed_all(db: Session) -> dict:
         counts["knowledge"] += 1
 
     # Admin + demo citizen
+    sec_pin = settings.ADMIN_SECONDARY_PIN
     if not db.query(User).filter_by(email="admin@schemeai.in").first():
         from app.core.security import generate_citizen_id
         admin = User(email="admin@schemeai.in", full_name="SchemeAI Admin",
                      role="admin", admin_role="super_admin",
                      citizen_id=generate_citizen_id(db),
                      password_hash=hash_password("Admin@123"),
-                     secondary_password_hash=hash_password("7788"),
+                     secondary_password_hash=hash_password(sec_pin),
                      is_verified=True)
         db.add(admin)
         counts["users"] += 1
@@ -183,7 +185,7 @@ def seed_all(db: Session) -> dict:
         if demo_admin.admin_role != "super_admin" and db.query(User).filter_by(role="admin", admin_role="super_admin").count() == 0:
             demo_admin.admin_role = "super_admin"
         if not demo_admin.secondary_password_hash:
-            demo_admin.secondary_password_hash = hash_password("123456")
+            demo_admin.secondary_password_hash = hash_password(sec_pin)
 
     # One test admin per role (used by the role-based authorization test suite).
     # Passwords: "<RoleName>@123" e.g. superadmin@schemeai.in / SuperAdmin@123
@@ -210,7 +212,7 @@ def seed_all(db: Session) -> dict:
             u = User(email=email, full_name=name, role="admin", admin_role=role,
                      citizen_id=generate_citizen_id(db),
                      password_hash=hash_password(password),
-                     secondary_password_hash=hash_password("123456"),
+                     secondary_password_hash=hash_password(sec_pin),
                      is_verified=True)
             db.add(u)
             db.flush()
@@ -220,7 +222,7 @@ def seed_all(db: Session) -> dict:
             if u.admin_role != role:
                 u.admin_role = role
             if not u.secondary_password_hash:
-                u.secondary_password_hash = hash_password("123456")
+                u.secondary_password_hash = hash_password(sec_pin)
 
     if not db.query(User).filter_by(email="demo@schemeai.in").first():
         from app.core.security import generate_citizen_id

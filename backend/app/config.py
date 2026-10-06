@@ -52,10 +52,14 @@ class Settings(BaseSettings):
     # public "syncRecord" action. Empty = sync disabled.
     GAS_WEBAPP_URL: str = ""
 
+    # Admin security PIN/password (configured via ADMIN_SECONDARY_PIN in .env)
+    ADMIN_SECONDARY_PIN: str = "7788"
+
     CORS_ORIGINS: list[str] = [
         "http://localhost:5173",
         "http://127.0.0.1:5173",
         "https://scheme-ai-nine.vercel.app",
+        "https://schemeai-aesa.onrender.com",
     ]
 
     @field_validator("CORS_ORIGINS", mode="before")
