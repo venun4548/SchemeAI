@@ -27,6 +27,8 @@ export default function AdminSecurityModal({ onSuccess, onCancel }) {
       toast.success('Verification successful')
       if (onSuccess) {
         onSuccess()
+      } else {
+        navigate('/admin', { replace: true })
       }
     } catch (err) {
       const errMsg = err.message?.includes('Invalid security PIN')

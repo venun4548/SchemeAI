@@ -1,4 +1,4 @@
-import { Navigate, Outlet, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, useLocation, useNavigate } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import Spinner from './Spinner'
 import AdminSecurityModal from './AdminSecurityModal'
@@ -16,6 +16,7 @@ const ADMIN_ROLES = [
 export function ProtectedRoute({ admin = false }) {
   const { user, loading } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
 
   if (loading) return <Spinner label="Checking session…" />
   if (!user) return <Navigate to="/login" state={{ from: location.pathname }} replace />
@@ -27,7 +28,7 @@ export function ProtectedRoute({ admin = false }) {
   if (admin && !user.secondary_verified) {
     return (
       <div className="min-h-screen bg-cream flex items-center justify-center p-4">
-        <AdminSecurityModal />
+        <AdminSecurityModal onSuccess={() => navigate(location.pathname.startsWith('/admin') ? location.pathname : '/admin', { replace: true })} />
       </div>
     )
   }
