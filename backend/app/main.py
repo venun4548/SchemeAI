@@ -1,4 +1,4 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Depends, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from app.api import (
@@ -23,7 +23,10 @@ from app.api import (
     voice,
 )
 from app.config import settings
-from app.database import SessionLocal, init_db
+from app.core.security import get_current_user
+from app.database import SessionLocal, get_db, init_db
+from app.models.models import User
+from app.schemas.schemas import VerifyAdminPinIn
 
 
 def create_app() -> FastAPI:
@@ -51,8 +54,9 @@ def create_app() -> FastAPI:
             seed_all(db)
 
     @app.get("/api/health")
+    @app.get("/health")
     def health():
-        return {"status": "ok", "app": settings.APP_NAME, "version": settings.APP_VERSION}
+        return {"status": "ok", "app": settings.APP_NAME, "version": settings.APP_VERSION, "commit": "0127b5c-updated"}
 
     prefix = "/api"
     app.include_router(auth.router, prefix=prefix)
@@ -74,6 +78,17 @@ def create_app() -> FastAPI:
     app.include_router(admin.router, prefix=prefix)
     app.include_router(ops.router, prefix=prefix)
     app.include_router(public.router, prefix=prefix)
+
+    # Top-level direct routes to guarantee no 404 regardless of host proxy pathing
+    @app.post("/api/auth/verify-secondary")
+    @app.post("/api/auth/verify-secondary/")
+    @app.post("/auth/verify-secondary")
+    @app.post("/auth/verify-secondary/")
+    @app.post("/api/admin/verify-secondary")
+    @app.post("/api/admin/verify-secondary/")
+    def direct_verify_secondary(data: VerifyAdminPinIn, request: Request, user: User = Depends(get_current_user), db: Session = Depends(get_db)):
+        from app.api.auth import verify_secondary
+        return verify_secondary(data=data, request=request, user=user, db=db)
 
     return app
 
